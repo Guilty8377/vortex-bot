@@ -189,7 +189,7 @@ $("#btn-pnl").addEventListener("click", () => {
 $("#pnl-close").addEventListener("click", () => ($("#pnl-panel").hidden = true));
 
 function renderHome() {
-  if (!$("#p-home").classList.contains("on")) { renderStatus(); renderPnl(); return; }
+  if (!$("#p-home").classList.contains("on")) { renderStatus(); renderPnl(); renderTicker(); return; }
   renderColumns(); renderFeed(); renderTicker(); renderStatus(); renderPnl();
 }
 feed.on(renderHome);
