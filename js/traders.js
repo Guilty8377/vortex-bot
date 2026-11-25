@@ -73,7 +73,7 @@ async function loadBags(w) {
   const h = tr.holds[w];
   // most wallets hold thousands of tiny spam tokens, so only price the biggest unfrozen amounts
   const cand = Object.entries(h.raw).map(([mint, accts]) => ({ mint, amt: accts.reduce((a, x) => a + (x.isFrozen ? 0 : x.uiAmount), 0) }))
-    .filter((x) => x.amt > 1000 && x.mint !== SOL_MINT).sort((a, b) => b.amt - a.amt).slice(0, 100);
+    .filter((x) => x.amt > 0 && x.mint !== SOL_MINT).sort((a, b) => b.amt - a.amt).slice(0, 500);
   const prices = {};
   for (let i = 0; i < cand.length; i += 50) {
     try { Object.assign(prices, await (await fetch(JUP + cand.slice(i, i + 50).map((x) => x.mint).join(","))).json()); } catch {}
