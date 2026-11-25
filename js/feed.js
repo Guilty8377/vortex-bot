@@ -169,6 +169,28 @@ function applyPair(mint, p) {
   if (t.created && p.pairCreatedAt && p.pairCreatedAt < t.created) t.created = p.pairCreatedAt;
   checkCall(t);
 }
+// Jupiter's free price API knows brand-new tokens before DexScreener lists them
+const JUP = "https://lite-api.jup.ag/price/v3?ids=";
+async function pollJup() {
+  const ids = [...feed.tokens.values()].filter((t) => !t.dexId && !t.migrated)
+    .sort((a, b) => b.created - a.created).slice(0, 50).map((t) => t.mint);
+  if (!ids.length) return;
+  try {
+    const r = await fetch(JUP + ids.join(","));
+    if (!r.ok) return;
+    const j = await r.json();
+    for (const [mint, v] of Object.entries(j)) {
+      const t = feed.tokens.get(mint);
+      if (!t || t.dexId || !v?.usdPrice) continue;
+      const old = t.priceUsd;
+      const priceSol = feed.solUsd ? v.usdPrice / feed.solUsd : t.priceSol;
+      upsert(mint, { priceUsd: v.usdPrice, priceSol, mcUsd: v.usdPrice * 1e9, mcSol: priceSol ? priceSol * 1e9 : t.mcSol,
+        liqUsd: v.liquidity ?? t.liqUsd, ch5m: old ? ((v.usdPrice - t.firstUsd) / t.firstUsd) * 100 : t.ch5m });
+      t.firstUsd ||= v.usdPrice;
+    }
+    feed.emit();
+  } catch {}
+}
 async function pollSol() {
   try {
     const r = await fetch(DEX + SOL_MINT);
@@ -223,5 +245,6 @@ if (feed.solUsd) $("#st-sol").textContent = "SOL $" + feed.solUsd.toFixed(2);
 connect();
 pollSol();
 setInterval(pollDex, 2500);
+setInterval(pollJup, 3000);
 setInterval(() => document.visibilityState === "visible" && pollSol(), 60000);
 setInterval(snapshot, 15000);
