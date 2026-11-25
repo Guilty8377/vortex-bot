@@ -74,16 +74,22 @@ async function loadBags(w) {
   // most wallets hold thousands of tiny spam tokens, so only price the biggest unfrozen amounts
   const cand = Object.entries(h.raw).map(([mint, accts]) => ({ mint, amt: accts.reduce((a, x) => a + (x.isFrozen ? 0 : x.uiAmount), 0) }))
     .filter((x) => x.amt > 0 && x.mint !== SOL_MINT).sort((a, b) => b.amt - a.amt).slice(0, 500);
-  const prices = {};
-  for (let i = 0; i < cand.length; i += 50) {
-    try { Object.assign(prices, await (await fetch(JUP + cand.slice(i, i + 50).map((x) => x.mint).join(","))).json()); } catch {}
+  // DexScreener allows more requests than Jupiter's free price API, 30 tokens per call
+  const best = {};
+  for (let i = 0; i < cand.length; i += 30) {
+    try {
+      const pairs = await (await fetch(DEX + cand.slice(i, i + 30).map((x) => x.mint).join(","))).json();
+      for (const p of pairs) {
+        const m = p.baseToken?.address;
+        if (m && (!best[m] || (p.liquidity?.usd || 0) > (best[m].liquidity?.usd || 0))) best[m] = p;
+      }
+    } catch {}
+    await new Promise((r) => setTimeout(r, 120));
   }
-  const bags = cand.map((x) => ({ ...x, usd: x.amt * (prices[x.mint]?.usdPrice || 0) })).filter((x) => x.usd >= 50)
-    .sort((a, b) => b.usd - a.usd).slice(0, 12);
-  try {
-    const info = bags.length ? await (await fetch(`${JUPD}/v1/assets/search?query=${bags.map((b) => b.mint).join(",")}`)).json() : [];
-    for (const b of bags) { const a = info.find((x) => x.id === b.mint); b.symbol = a?.symbol || fmt.short(b.mint); b.icon = a?.icon || ""; b.mc = a?.mcap; }
-  } catch {}
+  const bags = cand.filter((x) => best[x.mint]).map((x) => {
+    const p = best[x.mint];
+    return { ...x, usd: x.amt * (+p.priceUsd || 0), symbol: p.baseToken.symbol, icon: p.info?.imageUrl || "", mc: p.marketCap || p.fdv };
+  }).filter((x) => x.usd >= 50).sort((a, b) => b.usd - a.usd).slice(0, 12);
   h.bags = bags; h.t = Date.now();
   renderKols();
 }
