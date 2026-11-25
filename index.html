@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vortex | paper trading terminal</title>
+<meta name="description" content="Vortex is a paper trading terminal for new Solana memecoins. Real live tokens, pretend money.">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/vortex.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <a class="brand" href="#home" aria-label="Vortex home">
+    <img src="img/logo.svg" alt="" width="28" height="28">
+    <span>VORTEX</span>
+  </a>
+  <nav class="nav" aria-label="Main menu">
+    <a href="#home" data-page="home">Home</a>
+    <a href="#calls" data-page="calls">Calls</a>
+    <a href="#traders" data-page="traders">Top traders</a>
+    <a href="#portfolio" data-page="portfolio">Portfolio</a>
+    <div class="more">
+      <button type="button" class="more-btn" aria-haspopup="true" aria-expanded="false">More <span aria-hidden="true">▾</span></button>
+      <div class="more-menu" role="menu">
+        <a href="#fees" data-page="fees" role="menuitem">Fees</a>
+        <a href="#learn" data-page="learn" role="menuitem">Learn</a>
+        <a href="#help" data-page="help" role="menuitem">Help</a>
+      </div>
+    </div>
+  </nav>
+  <form class="search" role="search" id="search-form">
+    <label class="sr" for="search">Search token name, ticker or address</label>
+    <input id="search" type="search" placeholder="Token, ticker or address" autocomplete="off">
+    <kbd aria-hidden="true">/</kbd>
+  </form>
+  <div class="top-actions">
+    <button type="button" class="icon-btn" id="btn-sound" aria-pressed="true" title="Sound on or off">🔊</button>
+    <button type="button" class="icon-btn" id="btn-text" aria-pressed="false" title="Bigger text">A+</button>
+    <button type="button" class="balance-btn" id="btn-balance" title="Your paper balance">– SOL</button>
+  </div>
+</header>
+
+<div class="ticker" aria-label="Top movers">
+  <div class="ticker-track" id="ticker"><span class="muted">Waiting for live tokens…</span></div>
+</div>
+
+<main id="main">
+  <!-- HOME -->
+  <section class="page" id="p-home" aria-labelledby="home-h">
+    <h1 class="sr" id="home-h">Live new tokens</h1>
+    <div class="toolbar">
+      <div class="quick">
+        <span class="bolt" aria-hidden="true">⚡</span>
+        <label for="quick-amt">Quick buy</label>
+        <input id="quick-amt" type="number" min="0.01" step="0.01" value="0.1" inputmode="decimal">
+        <span class="muted">SOL</span>
+      </div>
+      <div class="chips" role="group" aria-label="Filter by platform">
+        <button type="button" class="chip on" data-src="all">All</button>
+        <button type="button" class="chip" data-src="pump">Pump</button>
+        <button type="button" class="chip" data-src="bonk">Bonk</button>
+      </div>
+      <button type="button" class="chip warn" id="btn-safe" aria-pressed="false">🛡 Hide risky</button>
+      <span class="paper-tag">PAPER TRADING · no real money</span>
+    </div>
+
+    <div class="tabs-mobile" role="tablist" aria-label="Columns">
+      <button role="tab" aria-selected="true" data-col="new">New</button>
+      <button role="tab" aria-selected="false" data-col="stretch">Final stretch</button>
+      <button role="tab" aria-selected="false" data-col="migrated">Migrated</button>
+    </div>
+
+    <div class="board">
+      <aside class="col feed-col" aria-labelledby="feed-h">
+        <div class="col-head"><h2 id="feed-h">Vortex signals</h2><span class="live-dot" aria-hidden="true"></span></div>
+        <ol class="feed" id="feed"><li class="empty">Signals show here when a token passes the Vortex call rules.</li></ol>
+      </aside>
+      <section class="col" data-col="new" aria-labelledby="new-h">
+        <div class="col-head"><h2 id="new-h">New <span class="count" id="n-new">0</span></h2>
+          <input class="col-search" data-for="new" placeholder="Search" aria-label="Search new tokens"></div>
+        <div class="cards" id="c-new"></div>
+      </section>
+      <section class="col" data-col="stretch" aria-labelledby="stretch-h">
+        <div class="col-head"><h2 id="stretch-h">Final stretch <span class="count" id="n-stretch">0</span></h2>
+          <input class="col-search" data-for="stretch" placeholder="Search" aria-label="Search final stretch tokens"></div>
+        <div class="cards" id="c-stretch"></div>
+      </section>
+      <section class="col" data-col="migrated" aria-labelledby="mig-h">
+        <div class="col-head"><h2 id="mig-h">Migrated <span class="count" id="n-migrated">0</span></h2>
+          <input class="col-search" data-for="migrated" placeholder="Search" aria-label="Search migrated tokens"></div>
+        <div class="cards" id="c-migrated"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- placeholder pages, built one by one -->
+  <section class="page soon" id="p-calls"><h1>Calls</h1><p>This page is next on the build list.</p></section>
+  <section class="page soon" id="p-traders"><h1>Top traders</h1><p>Coming soon.</p></section>
+  <section class="page soon" id="p-portfolio"><h1>Portfolio</h1><p>Coming soon.</p></section>
+  <section class="page soon" id="p-fees"><h1>Fees</h1><p>Coming soon.</p></section>
+  <section class="page soon" id="p-learn"><h1>Learn</h1><p>Coming soon.</p></section>
+  <section class="page soon" id="p-help"><h1>Help</h1><p>Coming soon.</p></section>
+  <section class="page soon" id="p-token"><h1>Token page</h1><p>Coming soon. <a id="token-ext" target="_blank" rel="noopener">Open on DexScreener</a></p></section>
+</main>
+
+<footer class="status" aria-label="Status">
+  <span class="st-live" id="st-live"><span class="dot"></span> Connecting…</span>
+  <span id="st-sol">SOL –</span>
+  <span id="st-count">0 tokens tracked</span>
+  <span class="grow"></span>
+  <button type="button" class="st-btn" id="btn-notify">🔔 Alerts off</button>
+  <button type="button" class="st-btn pnl" id="btn-pnl">PnL –</button>
+  <button type="button" class="st-btn chat" id="btn-chat" aria-label="Live chat">💬</button>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="start-dlg" aria-labelledby="start-h">
+  <form method="dialog" id="start-form">
+    <img src="img/logo.svg" alt="" width="44" height="44">
+    <h2 id="start-h">Welcome to Vortex</h2>
+    <p>Vortex is <b>paper trading</b>. The tokens and prices are real and live, but the money is pretend, so you can practise without losing anything.</p>
+    <label for="start-amt">How much pretend SOL do you want to start with?</label>
+    <div class="start-row">
+      <input id="start-amt" type="number" min="0.1" max="100000" step="0.1" value="10" required>
+      <span>SOL</span>
+    </div>
+    <div class="presets">
+      <button type="button" data-v="1">1</button><button type="button" data-v="10">10</button>
+      <button type="button" data-v="50">50</button><button type="button" data-v="100">100</button>
+    </div>
+    <p class="warn-box">Most new memecoins lose almost all their value. Practising here first is the safe way to learn.</p>
+    <button class="primary" value="ok">Start trading</button>
+  </form>
+</dialog>
+
+<script src="js/core.js"></script>
+<script src="js/feed.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>
