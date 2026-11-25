@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=5">
+<link rel="stylesheet" href="css/vortex.css?v=6">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -99,7 +99,37 @@
   </section>
 
   <!-- placeholder pages, built one by one -->
-  <section class="page soon" id="p-calls"><h1>Calls</h1><p>This page is next on the build list.</p></section>
+  <section class="page" id="p-calls" aria-labelledby="calls-h">
+    <div class="panel calls-top">
+      <div>
+        <h1 id="calls-h">Vortex calls</h1>
+        <p class="muted">Every token Vortex calls, the moment it is called, with how it did after. Nothing is hidden, losing calls stay on the list.
+        A token is called when it is under <b id="r-age"></b> minutes old, worth over <b id="r-mc"></b>, has <b id="r-buys"></b>+ buys in 5 minutes with more buys than sells, and the dev bought <b id="r-dev"></b>% or less.</p>
+        <p class="small muted">Calls are only made while Vortex is open in a browser. Turn on alerts to get a pop up and a sound for each new call.</p>
+      </div>
+      <div class="call-stats" id="call-stats"></div>
+    </div>
+    <div class="calls-bar">
+      <div class="seg" id="c-sort" role="group" aria-label="Sort calls">
+        <button data-s="new" class="on">Newest</button><button data-s="best">Best first</button>
+      </div>
+      <div class="seg" id="c-range" role="group" aria-label="Time range">
+        <button data-r="24">24 hours</button><button data-r="168" class="on">7 days</button><button data-r="720">30 days</button>
+      </div>
+      <button class="chip" id="c-alerts">🔔 Turn on alerts</button>
+      <span class="grow"></span>
+      <label class="small muted" for="c-amt">Snipe amount</label>
+      <input id="c-amt" class="mini-in" type="number" min="0.01" step="0.01" value="0.1"><span class="small muted">SOL</span>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>Live paper tests <span class="muted small">pretend 0.1 SOL on every call, 1% fees included</span></h2></div>
+      <div class="tests" id="call-tests"></div>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2 id="c-list-h">Calls</h2><span class="small muted"><span class="live-dot" style="display:inline-block"></span> live</span></div>
+      <ol class="call-list" id="call-list"></ol>
+    </div>
+  </section>
   <section class="page soon" id="p-traders"><h1>Top traders</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-portfolio"><h1>Portfolio</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-fees"><h1>Fees</h1><p>Coming soon.</p></section>
@@ -209,9 +239,10 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=5"></script>
-<script src="js/feed.js?v=5"></script>
-<script src="js/home.js?v=5"></script>
-<script src="js/token.js?v=5"></script>
+<script src="js/core.js?v=6"></script>
+<script src="js/feed.js?v=6"></script>
+<script src="js/home.js?v=6"></script>
+<script src="js/token.js?v=6"></script>
+<script src="js/calls.js?v=6"></script>
 </body>
 </html>

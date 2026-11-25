@@ -279,4 +279,3 @@ const _home = pages.home.open;
 pages.home.open = () => { stopToken(); document.title = "Vortex | paper trading terminal"; _home(); };
 for (const k of ["calls", "traders", "portfolio", "fees", "learn", "help"]) pages[k] ||= { open: stopToken };
 
-route();

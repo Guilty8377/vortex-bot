@@ -210,21 +210,33 @@ async function pollSol() {
 // ---------- Vortex calls ----------
 function checkCall(t) {
   const call = feed.calls.find((c) => c.mint === t.mint);
-  if (call) {
-    if (t.mcUsd > (call.peak || 0)) { call.peak = t.mcUsd; saveCalls(); }
-    return;
-  }
+  if (call) { trackCall(call, t.mcUsd); return; }
   const ageMin = (Date.now() - t.created) / 60000;
   const R = CALL_RULES;
   if (ageMin > R.maxAgeMin || !(t.mcUsd >= R.minMcUsd) || !(t.buys5m >= R.minBuys5m)) return;
   if (t.buys5m <= t.sells5m || (t.devPct || 0) > R.maxDevPct) return;
   const c = { mint: t.mint, symbol: t.symbol, name: t.name, image: t.image, t: Date.now(), mcAtCall: t.mcUsd, peak: t.mcUsd,
+    low: t.mcUsd, now: t.mcUsd, hits: {}, migratedAtCall: !!t.migrated,
     reason: `${t.buys5m} buys in 5m at ${fmt.usd(t.mcUsd)}` };
   feed.calls.unshift(c);
   feed.calls = feed.calls.slice(0, 200);
   saveCalls();
   sound.call();
   notify.send(`Vortex call: ${t.symbol}`, c.reason, t.image);
+}
+// remember the first time each call reached x2, x3, -30% and -40% so strategies can be tested fairly
+const CALL_MARKS = { x1_3: 1.3, x2: 2, x3: 3, d30: 0.7, d40: 0.6 };
+function trackCall(c, mc) {
+  if (!(mc > 0) || !c.mcAtCall) return;
+  c.now = mc; c.nowT = Date.now();
+  c.peak = Math.max(c.peak || 0, mc); c.low = Math.min(c.low ?? mc, mc);
+  c.hits ||= {};
+  const x = mc / c.mcAtCall;
+  for (const [k, v] of Object.entries(CALL_MARKS)) {
+    if (c.hits[k]) continue;
+    if (k.startsWith("x") ? x >= v : x <= v) c.hits[k] = Date.now();
+  }
+  clearTimeout(trackCall.t); trackCall.t = setTimeout(saveCalls, 2000);
 }
 function saveCalls() { store.set("calls", feed.calls); }
 
