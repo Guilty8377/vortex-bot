@@ -39,6 +39,25 @@ function socials(s) {
   return a.join(" ");
 }
 
+function posInfo(t) {
+  const p = wallet.data?.positions[t.mint];
+  if (!p) return null;
+  const value = t.priceSol ? p.tokens * t.priceSol * (1 - FEE) : null;
+  const pnl = value != null ? value - p.cost : null;
+  return { p, value, pnl, pct: pnl != null && p.cost ? (pnl / p.cost) * 100 : null };
+}
+function posRow(t) {
+  const i = posInfo(t);
+  if (!i) return "";
+  const cls = i.pnl >= 0 ? "up" : "down";
+  return `<div class="pos">
+    <span>Holding <b class="num">${fmt.sol(i.value, 3)} SOL</b></span>
+    <span class="${cls} num">${i.pnl >= 0 ? "▲ +" : "▼ "}${fmt.sol(i.pnl, 4)} SOL (${i.pct != null ? i.pct.toFixed(1) : "–"}%)</span>
+    <button class="sell" data-sell="${t.mint}" data-f="0.5">Sell 50%</button>
+    <button class="sell" data-sell="${t.mint}" data-f="1">Sell all</button>
+  </div>`;
+}
+
 function card(t, col) {
   const age = (Date.now() - t.created) / 1000;
   const pr = t.progress || 0;
@@ -70,6 +89,7 @@ function card(t, col) {
         ${ch != null ? `<span class="${ch >= 0 ? "up" : "down"} num" title="Price change 5 minutes">${fmt.pct(ch)}</span>` : ""}
       </div>
       <div class="tags">${tagsFor(t)}</div>
+      ${posRow(t)}
     </div>
     <div style="display:grid">
       <div class="box">
@@ -139,9 +159,38 @@ function renderStatus() {
   }
 }
 
+function renderPnl() {
+  const box = $("#pnl-panel");
+  if (!box || box.hidden || !wallet.ready()) return;
+  const held = Object.values(wallet.data.positions);
+  const value = wallet.value((m) => feed.get(m));
+  const total = wallet.data.balance + value, pnl = total - wallet.data.start;
+  $("#pnl-sum").innerHTML = `
+    <div><small>Balance</small><b class="num">${fmt.sol(wallet.data.balance, 3)} SOL</b></div>
+    <div><small>In positions</small><b class="num">${fmt.sol(value, 3)} SOL</b></div>
+    <div><small>Total PnL</small><b class="num ${pnl >= 0 ? "up" : "down"}">${pnl >= 0 ? "▲ +" : "▼ "}${fmt.sol(pnl, 4)} SOL</b></div>`;
+  $("#pnl-list").innerHTML = held.length ? held.map((p) => {
+    const t = feed.get(p.mint) || { ...p, socials: {} };
+    const i = posInfo(t) || { p, value: null, pnl: null, pct: null };
+    return `<li data-open="${p.mint}">
+      <span class="av">${avatar(t)}</span>
+      <div><b>${esc(p.symbol)}</b><span class="num">cost ${fmt.sol(p.cost, 3)} · now ${fmt.sol(i.value, 3)} SOL</span></div>
+      <span class="num ${i.pnl >= 0 ? "up" : "down"}">${i.pct != null ? (i.pnl >= 0 ? "▲ " : "▼ ") + Math.abs(i.pct).toFixed(1) + "%" : "–"}</span>
+      <button class="sell" data-sell="${p.mint}" data-f="1">Sell</button>
+    </li>`;
+  }).join("") : '<li class="empty">No open positions. Use a ⚡ quick buy button on a token.</li>';
+}
+$("#btn-pnl").addEventListener("click", () => {
+  if (!wallet.ready()) return askStart();
+  const box = $("#pnl-panel");
+  box.hidden = !box.hidden;
+  renderPnl();
+});
+$("#pnl-close").addEventListener("click", () => ($("#pnl-panel").hidden = true));
+
 function renderHome() {
-  if (!$("#p-home").classList.contains("on")) { renderStatus(); return; }
-  renderColumns(); renderFeed(); renderTicker(); renderStatus();
+  if (!$("#p-home").classList.contains("on")) { renderStatus(); renderPnl(); return; }
+  renderColumns(); renderFeed(); renderTicker(); renderStatus(); renderPnl();
 }
 feed.on(renderHome);
 setInterval(renderHome, 1000); // keeps the ages ticking
@@ -153,6 +202,13 @@ document.addEventListener("click", (e) => {
     e.stopPropagation();
     const t = feed.get(buy.dataset.buy);
     if (t && wallet.buy(t, $("#quick-amt").value)) renderHome();
+    return;
+  }
+  const sl = e.target.closest("[data-sell]");
+  if (sl) {
+    e.stopPropagation();
+    const t = feed.get(sl.dataset.sell);
+    if (t && wallet.sell(t, +sl.dataset.f)) { renderHome(); renderPnl(); }
     return;
   }
   const cp = e.target.closest("[data-copy]");
