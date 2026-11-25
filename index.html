@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=3">
+<link rel="stylesheet" href="css/vortex.css?v=4">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -105,7 +105,70 @@
   <section class="page soon" id="p-fees"><h1>Fees</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-learn"><h1>Learn</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-help"><h1>Help</h1><p>Coming soon.</p></section>
-  <section class="page soon" id="p-token"><h1>Token page</h1><p>Coming soon. <a id="token-ext" target="_blank" rel="noopener">Open on DexScreener</a></p></section>
+  <section class="page" id="p-token" aria-labelledby="tk-sym">
+    <div class="tk-head">
+      <a href="#home" class="back" aria-label="Back to home">←</a>
+      <span class="tk-av" id="tk-av"></span>
+      <div class="tk-title">
+        <div><h1 id="tk-sym">–</h1><span class="muted" id="tk-name"></span>
+          <button class="mini" id="tk-copy" title="Copy address" aria-label="Copy address">⧉</button>
+          <span class="soc" id="tk-soc"></span></div>
+        <span class="addr-l num" id="tk-addr"></span>
+      </div>
+      <dl class="tk-stats" id="tk-stats"></dl>
+    </div>
+    <div class="tk-grid">
+      <aside class="panel tk-left" aria-labelledby="safe-h">
+        <div class="col-head"><h2 id="safe-h">Safety check</h2><span class="score" id="tk-score">–</span></div>
+        <ul class="checks" id="tk-checks"><li class="empty">Loading…</li></ul>
+        <div class="col-head"><h2>Vortex call</h2></div>
+        <div class="tk-call" id="tk-call"></div>
+      </aside>
+      <section class="panel tk-mid" aria-label="Chart and trades">
+        <div class="chart-bar">
+          <div class="seg" id="tf" role="group" aria-label="Time frame">
+            <button data-tf="1_SECOND">1s</button><button data-tf="15_SECOND">15s</button><button data-tf="1_MINUTE" class="on">1m</button>
+            <button data-tf="5_MINUTE">5m</button><button data-tf="15_MINUTE">15m</button><button data-tf="1_HOUR">1h</button>
+          </div>
+          <div class="seg" id="ctype" role="group" aria-label="Chart type">
+            <button data-ct="mcap" class="on">MC $</button><button data-ct="price">Price</button>
+          </div>
+          <div class="seg" id="cstyle" role="group" aria-label="Candle style">
+            <button data-cs="candles" class="on">Candles</button><button data-cs="heikin">Heikin Ashi</button>
+          </div>
+        </div>
+        <div id="chart" class="chart" role="img" aria-label="Price chart"></div>
+        <div class="tabs" role="tablist" aria-label="Token details">
+          <button role="tab" aria-selected="true" data-tab="trades">Live trades</button>
+          <button role="tab" aria-selected="false" data-tab="holders">Holders <span id="tk-hc" class="count"></span></button>
+          <button role="tab" aria-selected="false" data-tab="mine">My trades</button>
+        </div>
+        <div class="tab-body" id="tk-tab"></div>
+      </section>
+      <aside class="panel tk-right" aria-label="Buy and sell">
+        <div class="bs-tabs" role="tablist">
+          <button role="tab" aria-selected="true" data-side="buy" class="buy">Buy</button>
+          <button role="tab" aria-selected="false" data-side="sell" class="sell-t">Sell</button>
+        </div>
+        <div class="trade-box">
+          <label for="tk-amt" id="tk-amt-l">Amount (SOL)</label>
+          <div class="amt-row"><input id="tk-amt" type="number" min="0" step="0.01" value="0.1" inputmode="decimal"><span id="tk-unit">SOL</span></div>
+          <div class="presets" id="tk-presets"></div>
+          <details class="adv" id="tk-adv">
+            <summary>Take profit / stop loss</summary>
+            <p class="muted small">Sells everything automatically when it hits a target. Only works while Vortex is open.</p>
+            <div class="tpsl">
+              <label>Take profit at x<input id="tk-tp" type="number" min="1.1" step="0.1" placeholder="2"></label>
+              <label>Stop loss at −%<input id="tk-sl" type="number" min="1" max="99" step="1" placeholder="30"></label>
+            </div>
+          </details>
+          <button class="primary" id="tk-go">Buy</button>
+          <p class="small muted" id="tk-fee">1% Vortex fee included. Paper trade, no real money.</p>
+        </div>
+        <div class="my-pos" id="tk-pos"></div>
+      </aside>
+    </div>
+  </section>
 </main>
 
 <footer class="status" aria-label="Status">
@@ -145,8 +208,10 @@
   </form>
 </dialog>
 
-<script src="js/core.js?v=3"></script>
-<script src="js/feed.js?v=3"></script>
-<script src="js/home.js?v=3"></script>
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="js/core.js?v=4"></script>
+<script src="js/feed.js?v=4"></script>
+<script src="js/home.js?v=4"></script>
+<script src="js/token.js?v=4"></script>
 </body>
 </html>

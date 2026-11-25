@@ -269,16 +269,7 @@ $("#search-form").addEventListener("submit", (e) => {
   else toast("No live token matches that. Paste a contract address to open any token");
 });
 
-// token page placeholder until page 2 is built
-pages.token = {
-  open(mint) {
-    const t = feed.get(mint);
-    $("#p-token h1").textContent = t ? `${t.symbol} · token page` : "Token page";
-    $("#token-ext").href = t?.pairUrl || "https://dexscreener.com/solana/" + mint;
-  },
-};
 pages.home = { open: renderHome };
 
 // first visit: ask for a starting balance
 if (!wallet.ready()) askStart();
-route();

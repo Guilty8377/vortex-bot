@@ -21,7 +21,11 @@ const feed = {
   on(fn) { this.listeners.add(fn); },
   emit() {
     if (this._raf) return;
-    this._raf = requestAnimationFrame(() => { this._raf = 0; this.listeners.forEach((f) => f()); });
+    this._raf = requestAnimationFrame(() => {
+      this._raf = 0;
+      wallet.checkOrders((m) => this.tokens.get(m));
+      this.listeners.forEach((f) => f());
+    });
   },
   get(mint) { return this.tokens.get(mint); },
 };
@@ -172,8 +176,10 @@ function applyPair(mint, p) {
 // Jupiter's free price API knows brand-new tokens before DexScreener lists them
 const JUP = "https://lite-api.jup.ag/price/v3?ids=";
 async function pollJup() {
-  const ids = [...feed.tokens.values()].filter((t) => !t.dexId && !t.migrated)
-    .sort((a, b) => b.created - a.created).slice(0, 50).map((t) => t.mint);
+  const held = Object.keys(wallet.data?.positions || {});
+  const ids = [...new Set([...held, ...[...feed.tokens.values()].filter((t) => !t.dexId && !t.migrated)
+    .sort((a, b) => b.created - a.created).map((t) => t.mint)])].slice(0, 50);
+  held.forEach((m) => { if (!feed.tokens.has(m)) { const p = wallet.data.positions[m]; upsert(m, { symbol: p.symbol, name: p.name, image: p.image, created: Date.now() - 3600e3 }); } });
   if (!ids.length) return;
   try {
     const r = await fetch(JUP + ids.join(","));
@@ -181,7 +187,7 @@ async function pollJup() {
     const j = await r.json();
     for (const [mint, v] of Object.entries(j)) {
       const t = feed.tokens.get(mint);
-      if (!t || t.dexId || !v?.usdPrice) continue;
+      if (!t || !v?.usdPrice || (t.dexId && Date.now() - t.lastDex < 8000)) continue;
       const old = t.priceUsd;
       const priceSol = feed.solUsd ? v.usdPrice / feed.solUsd : t.priceSol;
       upsert(mint, { priceUsd: v.usdPrice, priceSol, mcUsd: v.usdPrice * 1e9, mcSol: priceSol ? priceSol * 1e9 : t.mcSol,
@@ -248,3 +254,4 @@ setInterval(pollDex, 2500);
 setInterval(pollJup, 3000);
 setInterval(() => document.visibilityState === "visible" && pollSol(), 60000);
 setInterval(snapshot, 15000);
+setInterval(() => wallet.checkOrders((m) => feed.tokens.get(m)), 2000); // also runs when the tab is in the background

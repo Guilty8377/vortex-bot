@@ -120,6 +120,31 @@ const wallet = {
   },
 };
 
+// take profit / stop loss, checked every time prices update
+wallet.setOrder = function (mint, tp, sl) {
+  this.data.orders ||= {};
+  if (!tp && !sl) delete this.data.orders[mint];
+  else this.data.orders[mint] = { tp: tp || null, sl: sl || null };
+  this.save();
+};
+wallet.checkOrders = function (getTok) {
+  const o = this.data?.orders;
+  if (!o) return;
+  for (const [mint, ord] of Object.entries(o)) {
+    const p = this.data.positions[mint], t = getTok(mint);
+    if (!p) { delete o[mint]; continue; }
+    if (!t?.priceSol || !p.cost) continue;
+    const x = (p.tokens * t.priceSol * (1 - FEE)) / p.cost;
+    const hitTp = ord.tp && x >= ord.tp, hitSl = ord.sl && x <= 1 - ord.sl / 100;
+    if (hitTp || hitSl) {
+      delete o[mint];
+      this.sell(t, 1);
+      const msg = `${hitTp ? "Take profit" : "Stop loss"} sold ${t.symbol} at x${x.toFixed(2)}`;
+      toast(msg); notify.send("Vortex " + (hitTp ? "take profit" : "stop loss"), msg, t.image);
+    }
+  }
+};
+
 function updateTopBalance() {
   $("#btn-balance").textContent = wallet.ready() ? fmt.sol(wallet.data.balance, 2) + " SOL" : "– SOL";
 }
