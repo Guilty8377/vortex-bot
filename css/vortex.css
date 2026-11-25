@@ -335,3 +335,24 @@ dialog p { color: var(--muted); }
 @media (max-width: 1100px) { .tests { grid-template-columns: 1fr 1fr; } .calls-top { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .tests { grid-template-columns: 1fr; } .call { grid-template-columns: 40px 1fr; } .call-right { grid-column: 1 / -1; justify-items: start; } }
 .call .l1 .name { flex: none; }
+
+/* top traders */
+#p-traders.on { display: grid; gap: 10px; align-content: start; }
+.lb td, .kol td { padding: 8px 10px; }
+.lb tr.me td { background: var(--accent-soft); }
+.lb .who, .kol .who { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.lb .who .ph, .kol .who .ph { width: 26px; height: 26px; border-radius: 50%; font-size: 12px; border: 1px solid var(--line2); }
+.kol tr.row { cursor: pointer; }
+.kol tr.row:hover td { background: var(--panel2); }
+.kol tr.open td { background: var(--panel2); }
+.kol .star { background: none; border: 0; color: var(--muted); font-size: 15px; }
+.kol .star.on { color: var(--orange); }
+.kol .links a { margin-right: 8px; color: var(--blue); text-decoration: none; font-size: 12px; }
+.hold-row td { background: var(--bg) !important; }
+.holds { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; padding: 4px 0; }
+.hold { display: grid; grid-template-columns: 32px 1fr auto; gap: 8px; align-items: center; border: 1px solid var(--line2);
+  border-radius: 9px; padding: 6px 8px; cursor: pointer; }
+.hold:hover { border-color: var(--accent); }
+.hold .av { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; }
+.hold .av img, .hold .av .ph { width: 100%; height: 100%; object-fit: cover; font-size: 13px; }
+.hold b { display: block; font-size: 12.5px; } .hold span { font-size: 11px; color: var(--muted); }

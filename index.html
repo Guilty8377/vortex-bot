@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=6">
+<link rel="stylesheet" href="css/vortex.css?v=7">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -130,7 +130,25 @@
       <ol class="call-list" id="call-list"></ol>
     </div>
   </section>
-  <section class="page soon" id="p-traders"><h1>Top traders</h1><p>Coming soon.</p></section>
+  <section class="page" id="p-traders" aria-labelledby="tr-h">
+    <div class="panel calls-top">
+      <div>
+        <h1 id="tr-h">Top traders</h1>
+        <p class="muted">Two boards. The paper leaderboard ranks you against the Vortex call plans using pretend money. The KOL list shows well known traders' public wallets, their live SOL balance and what they are holding right now, so you can learn from what they buy.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>Paper leaderboard</h2><span class="small muted">pretend money only</span></div>
+      <table class="tbl lb"><thead><tr><th>#</th><th>Trader</th><th>PnL</th><th>Return</th><th>Win rate</th><th>Trades</th><th>Best trade</th></tr></thead>
+        <tbody id="lb-body"></tbody></table>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>KOL wallets</h2>
+        <span class="small muted">Wallets from the public <a href="https://kolscan.io/leaderboard" target="_blank" rel="noopener">kolscan.io</a> leaderboard. Click a trader to see what they hold.</span></div>
+      <table class="tbl kol"><thead><tr><th></th><th>#</th><th>Trader</th><th>Wallet</th><th>SOL balance</th><th>Tokens held</th><th>Links</th></tr></thead>
+        <tbody id="kol-body"></tbody></table>
+    </div>
+  </section>
   <section class="page soon" id="p-portfolio"><h1>Portfolio</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-fees"><h1>Fees</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-learn"><h1>Learn</h1><p>Coming soon.</p></section>
@@ -239,10 +257,12 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=6"></script>
-<script src="js/feed.js?v=6"></script>
-<script src="js/home.js?v=6"></script>
-<script src="js/token.js?v=6"></script>
-<script src="js/calls.js?v=6"></script>
+<script src="js/core.js?v=7"></script>
+<script src="js/feed.js?v=7"></script>
+<script src="js/home.js?v=7"></script>
+<script src="js/token.js?v=7"></script>
+<script src="js/calls.js?v=7"></script>
+<script src="js/kols.js?v=7"></script>
+<script src="js/traders.js?v=7"></script>
 </body>
 </html>

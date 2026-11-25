@@ -147,4 +147,3 @@ feed.on(renderCalls);
 setInterval(renderCalls, 2000);
 pages.calls = { open() { stopToken(); paintAlerts(); renderCalls(); pollCallPrices(); } };
 
-route();
