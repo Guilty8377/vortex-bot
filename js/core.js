@@ -214,7 +214,7 @@ const notify = {
 };
 $("#btn-notify").addEventListener("click", () => notify.toggle());
 notify.paint();
-$("#btn-chat").addEventListener("click", () => { location.hash = "#help"; toast("Live chat is on the help page"); });
+
 
 // ---------- router ----------
 const pages = {};

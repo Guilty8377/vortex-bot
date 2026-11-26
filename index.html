@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=12">
+<link rel="stylesheet" href="css/vortex.css?v=13">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -248,7 +248,55 @@
       <dl class="gl" id="gl-list"></dl>
     </div>
   </section>
-  <section class="page soon" id="p-help"><h1>Help</h1><p>Coming soon.</p></section>
+  <section class="page" id="p-help" aria-labelledby="help-h">
+    <div class="panel help-hero">
+      <h1 id="help-h">How can we help?</h1>
+      <label class="sr" for="faq-q">Search help</label>
+      <input id="faq-q" type="search" placeholder="Type your question, for example: how do I sell" autocomplete="off">
+      <div class="help-quick">
+        <button class="chip" id="help-chat-open">💬 Start live chat</button>
+        <a class="chip" href="#learn">📘 Beginner lessons</a>
+        <a class="chip" href="#help-contact">✉ Contact form</a>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>Common questions</h2><span class="small muted" id="faq-count"></span></div>
+      <div class="faq" id="faq"></div>
+    </div>
+    <div class="help-grid">
+      <div class="panel" id="help-contact">
+        <div class="col-head"><h2>Contact form</h2></div>
+        <form class="help-form" id="help-form">
+          <label for="hf-topic">Topic</label>
+          <select id="hf-topic"><option>A trade went wrong</option><option>Prices or charts</option><option>Fees</option><option>Calls</option><option>Something else</option></select>
+          <label for="hf-msg">Message</label>
+          <textarea id="hf-msg" rows="4" required minlength="10" placeholder="Tell us what happened"></textarea>
+          <button class="primary" type="submit">Submit</button>
+          <p class="small muted">This paper version has no support staff yet, so requests are saved in your browser below. A live version would send them to the team.</p>
+        </form>
+        <ol class="tickets" id="tickets"></ol>
+      </div>
+      <div class="panel">
+        <div class="col-head"><h2>Other ways to reach us</h2></div>
+        <ul class="contact-list" id="contact-list"></ul>
+      </div>
+    </div>
+    <div class="panel legal" id="terms">
+      <div class="col-head"><h2>Terms of use</h2></div>
+      <div class="legal-body">
+        <p>Vortex is a paper trading website made for a school business assignment. All trades use pretend money and no real cryptocurrency is ever bought, sold or held.</p>
+        <p>Nothing on Vortex is financial advice. Calls, safety scores and KOL wallets are shown to help you learn and can be wrong. Real memecoin trading is very risky and most new tokens lose almost all their value.</p>
+        <p>Token data comes from public third party sources and may be late, missing or wrong.</p>
+      </div>
+    </div>
+    <div class="panel legal" id="privacy">
+      <div class="col-head"><h2>Privacy</h2></div>
+      <div class="legal-body">
+        <p>Vortex has no accounts and no server. Your balance, trades, settings and help requests are saved only in your own browser and are deleted if you clear your browser data or reset your wallet.</p>
+        <p>To show live data your browser connects directly to PumpPortal, DexScreener and Jupiter, and loads fonts from Google Fonts and the chart from unpkg. These services can see your IP address, the same as visiting their websites.</p>
+      </div>
+    </div>
+  </section>
   <section class="page" id="p-token" aria-labelledby="tk-sym">
     <div class="tk-head">
       <a href="#home" class="back" aria-label="Back to home">←</a>
@@ -331,6 +379,13 @@
   <ol class="pp-list" id="pnl-list"></ol>
 </aside>
 
+<aside class="chat" id="chat" hidden aria-labelledby="chat-h">
+  <div class="pp-head"><b id="chat-h">💬 Vortex help</b><button type="button" id="chat-close" aria-label="Close chat">✕</button></div>
+  <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
+  <form class="chat-in" id="chat-form"><label class="sr" for="chat-text">Message</label>
+    <input id="chat-text" placeholder="Ask a question" autocomplete="off"><button class="primary" type="submit">Send</button></form>
+</aside>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="start-dlg" aria-labelledby="start-h">
@@ -353,15 +408,16 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=12"></script>
-<script src="js/feed.js?v=12"></script>
-<script src="js/home.js?v=12"></script>
-<script src="js/token.js?v=12"></script>
-<script src="js/calls.js?v=12"></script>
-<script src="js/kols.js?v=12"></script>
-<script src="js/traders.js?v=12"></script>
-<script src="js/portfolio.js?v=12"></script>
-<script src="js/fees.js?v=12"></script>
-<script src="js/learn.js?v=12"></script>
+<script src="js/core.js?v=13"></script>
+<script src="js/feed.js?v=13"></script>
+<script src="js/home.js?v=13"></script>
+<script src="js/token.js?v=13"></script>
+<script src="js/calls.js?v=13"></script>
+<script src="js/kols.js?v=13"></script>
+<script src="js/traders.js?v=13"></script>
+<script src="js/portfolio.js?v=13"></script>
+<script src="js/fees.js?v=13"></script>
+<script src="js/learn.js?v=13"></script>
+<script src="js/help.js?v=13"></script>
 </body>
 </html>

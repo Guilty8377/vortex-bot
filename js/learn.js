@@ -155,4 +155,3 @@ $("#gl-q").addEventListener("input", renderGlossary);
 
 pages.learn = { open() { stopToken(); renderLesson(); renderGlossary(); } };
 
-route();
