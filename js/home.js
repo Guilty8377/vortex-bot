@@ -63,7 +63,7 @@ function posRow(t) {
 function card(t, col) {
   const age = (Date.now() - t.created) / 1000;
   const pr = t.progress || 0;
-  const ringC = t.migrated ? "#7aa7ff" : pr >= 70 ? "#ffb35c" : "#2fe0a0";
+  const ringC = t.migrated ? "#8fb2ff" : pr >= 70 ? "#ffb547" : "#3ee0a7";
   const tot = (t.buys5m || 0) + (t.sells5m || 0);
   const bPct = tot ? Math.round((t.buys5m / tot) * 100) : 50;
   const mc = t.mcUsd ?? (t.mcSol && feed.solUsd ? t.mcSol * feed.solUsd : null);
@@ -137,7 +137,7 @@ function renderFeed() {
     const x = c.peak && c.mcAtCall ? c.peak / c.mcAtCall : 1;
     return `<li class="sig" data-open="${c.mint}">
       <span class="av">${avatar(t)}</span>
-      <div><b>${esc(c.symbol)}</b><span>${esc(c.reason)} · ${fmt.age((Date.now() - c.t) / 1000)} ago</span></div>
+      <div><b>${esc(c.symbol)}</b><span>${esc(c.reason)}, ${fmt.age((Date.now() - c.t) / 1000)} ago</span></div>
       <span class="amt ${x >= 1.2 ? "up" : ""}" title="Best gain since the call">x${x.toFixed(2)}</span>
     </li>`;
   }).join("");
@@ -213,7 +213,7 @@ function renderDiscover() {
     const called = feed.calls.some((c) => c.mint === t.mint);
     return `<tr data-open="${t.mint}" tabindex="0">
       <td><button class="mini${home.stars.has(t.mint) ? " on" : ""}" data-star="${t.mint}" aria-label="Watchlist">★</button></td>
-      <td><span class="tok"><span class="av">${avatar(t)}</span><span><b>${esc(t.symbol)}</b><br><small class="muted">${esc(t.name)}${t.migrated ? " · migrated" : ""}</small></span></span></td>
+      <td><span class="tok"><span class="av">${avatar(t)}</span><span><b>${esc(t.symbol)}</b><br><small class="muted">${esc(t.name)}${t.migrated ? ", migrated" : ""}</small></span></span></td>
       <td class="num"><b>${fmt.usd(t.mcUsd)}</b></td><td class="num">${fmt.age((Date.now() - t.created) / 1000)}</td>
       ${pc(t.ch5m ?? t.chSeen)}${pc(t.ch1h)}
       <td class="num">${fmt.usd(t.vol5m)}</td><td class="num">${t.liqUsd != null ? fmt.usd(t.liqUsd) : "–"}</td>

@@ -50,7 +50,7 @@ function renderTests(list) {
     const wins = outs.filter((o) => o > 0.1).length;
     return `<div class="test"><h3>${plan.name}</h3>
       <div class="big ${pnl >= 0 ? "up" : "down"}">${list.length ? (pnl >= 0 ? "▲ +" : "▼ ") + Math.abs(pct).toFixed(1) + "%" : "–"}</div>
-      <p>${list.length} trades · ${wins} winners · ${pnl >= 0 ? "+" : ""}${pnl.toFixed(3)} SOL</p></div>`;
+      <p>${list.length} trades, ${wins} winners, ${pnl >= 0 ? "+" : ""}${pnl.toFixed(3)} SOL</p></div>`;
   }).join("");
 }
 
@@ -63,7 +63,7 @@ function renderCallList(list) {
     const t = feed.get(c.mint) || { ...c, socials: {} };
     const x = c.now ? c.now / c.mcAtCall : 1, peak = c.peak / c.mcAtCall;
     const migrated = t.migrated || c.migratedAtCall;
-    return `<li class="call" data-open="${c.mint}">
+    return `<li class="call-row" data-open="${c.mint}">
       <span class="av">${avatar(t)}</span>
       <div>
         <div class="l1"><b>$${esc(c.symbol)}</b><span class="name">${esc(c.name)}</span>

@@ -121,8 +121,8 @@ function renderLesson() {
       ${opts.map((o, oi) => `<button type="button" data-a="${oi}">${esc(o)}</button>`).join("")}</fieldset>`).join("")}
       <p class="quiz-msg" id="quiz-msg" role="status" aria-live="polite"></p></div>
     <div class="ln-nav">
-      <button class="chip" id="ln-prev" ${ln.i === 0 ? "disabled" : ""}>← Back</button>
-      ${ln.i < LESSONS.length - 1 ? '<button class="primary" id="ln-next">Next lesson →</button>' : '<a class="primary" href="#home" id="ln-go">Start paper trading →</a>'}
+      <button class="chip" id="ln-prev" ${ln.i === 0 ? "disabled" : ""}>Back</button>
+      ${ln.i < LESSONS.length - 1 ? '<button class="primary" id="ln-next">Next lesson</button>' : '<a class="primary" href="#home" id="ln-go">Start paper trading</a>'}
     </div>`;
   renderLessonList();
   $("#ln-body").scrollTop = 0;

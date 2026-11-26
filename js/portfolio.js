@@ -87,11 +87,11 @@ function renderPfChart() {
   if (!window.LightweightCharts) return;
   if (!pf.chart) {
     pf.chart = LightweightCharts.createChart(box, {
-      autoSize: true, layout: { background: { color: "transparent" }, textColor: "#8b8794", fontFamily: "IBM Plex Mono" },
-      grid: { vertLines: { color: "#18151b" }, horzLines: { color: "#18151b" } },
+      autoSize: true, layout: { background: { color: "transparent" }, textColor: "#a98f9a", fontFamily: "Manrope" },
+      grid: { vertLines: { color: "rgba(169,143,154,.08)" }, horzLines: { color: "rgba(169,143,154,.08)" } },
       timeScale: { timeVisible: true, borderColor: "#201c24" }, rightPriceScale: { borderColor: "#201c24" },
     });
-    pf.series = pf.chart.addAreaSeries({ lineColor: "#dc143c", topColor: "rgba(220,20,60,.35)", bottomColor: "rgba(220,20,60,0)", lineWidth: 2 });
+    pf.series = pf.chart.addAreaSeries({ lineColor: "#e0173f", topColor: "rgba(224,23,63,.32)", bottomColor: "rgba(224,23,63,0)", lineWidth: 2 });
   }
   pf.series.setData(eq);
   if (pf.line) { pf.series.removePriceLine(pf.line); pf.line = null; }

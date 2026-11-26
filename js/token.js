@@ -102,14 +102,14 @@ function makeChart() {
   box.innerHTML = "";
   tk.chart = LightweightCharts.createChart(box, {
     autoSize: true,
-    layout: { background: { color: "transparent" }, textColor: "#8b8794", fontFamily: "IBM Plex Mono" },
-    grid: { vertLines: { color: "#18151b" }, horzLines: { color: "#18151b" } },
-    timeScale: { timeVisible: true, secondsVisible: true, borderColor: "#201c24" },
-    rightPriceScale: { borderColor: "#201c24" },
+    layout: { background: { color: "transparent" }, textColor: "#a98f9a", fontFamily: "Manrope" },
+    grid: { vertLines: { color: "rgba(169,143,154,.08)" }, horzLines: { color: "rgba(169,143,154,.08)" } },
+    timeScale: { timeVisible: true, secondsVisible: true, borderColor: "rgba(169,143,154,.18)" },
+    rightPriceScale: { borderColor: "rgba(169,143,154,.18)" },
     crosshair: { mode: 0 },
   });
   tk.series = tk.chart.addCandlestickSeries({
-    upColor: "#2fe0a0", downColor: "#ff6b9a", borderVisible: false, wickUpColor: "#2fe0a0", wickDownColor: "#ff6b9a",
+    upColor: "#3ee0a7", downColor: "#ff7a93", borderVisible: false, wickUpColor: "#3ee0a7", wickDownColor: "#ff7a93",
     priceFormat: { type: "custom", minMove: 1e-12, formatter: (v) => (tk.ctype === "mcap" ? fmt.usd(v) : v < 0.01 ? v.toPrecision(3) : v.toFixed(4)) },
   });
   loadCandles(true);
@@ -341,7 +341,7 @@ function drawBubbles() {
       ctx.fillStyle = n.isPool ? "#3a3640" : (funders[n.f] || "#2a2530") + (n === hover ? "" : "cc");
       ctx.fill();
       ctx.lineWidth = n.bad ? 3 : 1; ctx.strokeStyle = n.bad ? "#ff6b9a" : "#0e0d11"; ctx.stroke();
-      if (n.r > 14) { ctx.fillStyle = "#fff"; ctx.font = "600 10px IBM Plex Mono"; ctx.textAlign = "center"; ctx.fillText(n.pct.toFixed(1) + "%", n.x, n.y + 3); }
+      if (n.r > 14) { ctx.fillStyle = "#fff"; ctx.font = "700 10px Manrope"; ctx.textAlign = "center"; ctx.fillText(n.pct.toFixed(1) + "%", n.x, n.y + 3); }
     }
   };
   draw();
