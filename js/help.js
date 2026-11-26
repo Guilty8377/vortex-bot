@@ -51,8 +51,9 @@ function renderContacts() {
     ["Email", CONTACT.email && `<a href="mailto:${esc(CONTACT.email)}">${esc(CONTACT.email)}</a>`],
     ["Telegram", CONTACT.telegram && `<a href="${esc(CONTACT.telegram)}" target="_blank" rel="noopener">${esc(CONTACT.telegram)}</a>`],
     ["X", CONTACT.x && `<a href="${esc(CONTACT.x)}" target="_blank" rel="noopener">${esc(CONTACT.x)}</a>`],
-  ];
-  $("#contact-list").innerHTML = items.map(([k, v]) => `<li><span class="muted">${k}</span>${v || '<span class="muted">coming soon</span>'}</li>`).join("")
+  ].filter(([, v]) => v); // only show contact details that exist
+  $("#contact-list").innerHTML = items.map(([k, v]) => `<li><span class="muted">${k}</span>${v}</li>`).join("")
+    + `<li><span class="muted">Contact form</span><a href="#help" data-jump="help-contact">Send a request</a></li>`
     + `<li><span class="muted">Live chat</span><button class="chip" data-chat>Open chat</button></li>
        <li><span class="muted">Legal</span><span><a href="#help" data-jump="terms">Terms of use</a> · <a href="#help" data-jump="privacy">Privacy</a></span></li>`;
 }
@@ -100,4 +101,3 @@ document.addEventListener("click", (e) => {
 
 pages.help = { open() { stopToken(); renderFaq(); renderTickets(); renderContacts(); } };
 
-route();

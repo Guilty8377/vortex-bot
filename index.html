@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=15">
+<link rel="stylesheet" href="css/vortex.css?v=16">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -47,6 +47,7 @@
   <div class="top-actions">
     <button type="button" class="icon-btn" id="btn-sound" aria-pressed="true" title="Sound on or off">🔊</button>
     <button type="button" class="icon-btn" id="btn-text" aria-pressed="false" title="Bigger text">A+</button>
+    <button type="button" class="icon-btn" id="btn-theme" aria-pressed="false" title="Light or dark mode">☀</button>
     <button type="button" class="balance-btn" id="btn-balance" title="Your paper balance">– SOL</button>
   </div>
 </header>
@@ -312,7 +313,9 @@
       <div class="help-quick">
         <button class="chip" id="help-chat-open">💬 Start live chat</button>
         <a class="chip" href="#learn">📘 Beginner lessons</a>
-        <a class="chip" href="#help-contact">✉ Contact form</a>
+        <a class="chip" href="#help-contact" data-jump="help-contact">✉ Contact form</a>
+        <a class="chip" href="#help" data-jump="feedback">⭐ Give feedback</a>
+        <button class="chip" id="tour-again">🧭 Take the tour</button>
       </div>
     </div>
     <div class="panel">
@@ -336,6 +339,27 @@
         <div class="col-head"><h2>Other ways to reach us</h2></div>
         <ul class="contact-list" id="contact-list"></ul>
       </div>
+    </div>
+    <div class="panel" id="feedback">
+      <div class="col-head"><h2>Give feedback</h2><span class="small muted">testing Vortex? this takes 2 minutes</span></div>
+      <form class="fb-form" id="fb-form">
+        <div class="fb-row">
+          <label>Your name (optional)<input id="fb-name" maxlength="40"></label>
+          <label>How do you know crypto?<select id="fb-exp"><option>Never used crypto</option><option>Used it a bit</option><option>Trade memecoins often</option></select></label>
+        </div>
+        <div class="fb-rates" id="fb-rates"></div>
+        <label>What did you like most?<textarea id="fb-like" rows="2" maxlength="600"></textarea></label>
+        <label>What would you change or what was confusing?<textarea id="fb-change" rows="2" maxlength="600"></textarea></label>
+        <label>Did anything not work?<textarea id="fb-bug" rows="2" maxlength="600"></textarea></label>
+        <button class="primary" type="submit">Submit feedback</button>
+      </form>
+      <div class="fb-done" id="fb-done" hidden>
+        <p><b>Thank you!</b> Vortex has no server, so please send this to the person who asked you to test it.</p>
+        <textarea id="fb-out" rows="8" readonly aria-label="Your feedback as text"></textarea>
+        <div class="pf-btns"><button class="chip" id="fb-copy">Copy</button><button class="chip" id="fb-dl">Download as file</button><button class="chip" id="fb-again">Fill in again</button></div>
+      </div>
+      <details class="fb-all"><summary class="small muted">Feedback saved in this browser (<span id="fb-n">0</span>)</summary>
+        <div class="pf-btns" style="padding:8px 0"><button class="chip" id="fb-csv">⬇ Download all as CSV</button></div></details>
     </div>
     <div class="panel legal" id="terms">
       <div class="col-head"><h2>Terms of use</h2></div>
@@ -457,6 +481,14 @@
     <input id="chat-text" placeholder="Ask a question" autocomplete="off"><button class="primary" type="submit">Send</button></form>
 </aside>
 
+<div class="tour" id="tour" hidden>
+  <div class="tour-hole" id="tour-hole"></div>
+  <div class="tour-card" id="tour-card" role="dialog" aria-live="polite" aria-labelledby="tour-t">
+    <p class="eyebrow" id="tour-n"></p><h3 id="tour-t"></h3><p id="tour-b"></p>
+    <div class="tour-btns"><button class="chip" id="tour-skip">Skip</button><button class="primary" id="tour-next">Next</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="start-dlg" aria-labelledby="start-h">
@@ -479,17 +511,18 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=15"></script>
-<script src="js/feed.js?v=15"></script>
-<script src="js/home.js?v=15"></script>
-<script src="js/token.js?v=15"></script>
-<script src="js/calls.js?v=15"></script>
-<script src="js/kols.js?v=15"></script>
-<script src="js/traders.js?v=15"></script>
-<script src="js/auto.js?v=15"></script>
-<script src="js/portfolio.js?v=15"></script>
-<script src="js/fees.js?v=15"></script>
-<script src="js/learn.js?v=15"></script>
-<script src="js/help.js?v=15"></script>
+<script src="js/core.js?v=16"></script>
+<script src="js/feed.js?v=16"></script>
+<script src="js/home.js?v=16"></script>
+<script src="js/token.js?v=16"></script>
+<script src="js/calls.js?v=16"></script>
+<script src="js/kols.js?v=16"></script>
+<script src="js/traders.js?v=16"></script>
+<script src="js/auto.js?v=16"></script>
+<script src="js/portfolio.js?v=16"></script>
+<script src="js/fees.js?v=16"></script>
+<script src="js/learn.js?v=16"></script>
+<script src="js/help.js?v=16"></script>
+<script src="js/extras.js?v=16"></script>
 </body>
 </html>
