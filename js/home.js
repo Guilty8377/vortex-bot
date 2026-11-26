@@ -7,6 +7,8 @@ const home = {
   stars: new Set(store.get("stars", [])),
   q: { new: "", stretch: "", migrated: "" },
   mobileCol: "new",
+  view: store.get("homeView", "trenches"),
+  dtab: "trending", dsort: "vol5m",
 };
 
 function avatar(t, cls = "") {
@@ -67,7 +69,8 @@ function card(t, col) {
   const mc = t.mcUsd ?? (t.mcSol && feed.solUsd ? t.mcSol * feed.solUsd : null);
   const mcCls = mc >= 30000 ? "hi" : mc >= 10000 ? "mid" : "";
   const fresh = t.fresh && Date.now() - t.fresh < 1500 ? " fresh" : "";
-  const ch = t.ch5m;
+  const ch = t.ch5m ?? t.chSeen;
+  const chTitle = t.ch5m != null ? "Price change in the last 5 minutes" : "Price change since Vortex first saw this token";
   const amt = +$("#quick-amt").value || 0.1;
   return `<article class="card${fresh}" tabindex="0" data-open="${t.mint}" aria-label="${esc(t.symbol)} ${esc(t.name)}">
     <div>
@@ -86,7 +89,8 @@ function card(t, col) {
       <div class="l2">
         <span class="age${age > 300 ? " old" : ""}" title="Age">${fmt.age(age)}</span>
         <span class="soc">${socials(t.socials)}</span>
-        ${ch != null ? `<span class="${ch >= 0 ? "up" : "down"} num" title="Price change 5 minutes">${fmt.pct(ch)}</span>` : ""}
+        ${ch != null ? `<span class="${ch >= 0 ? "up" : "down"} num" title="${chTitle}">${fmt.pct(ch)}${t.ch5m == null ? '<small class="muted"> new</small>' : ""}</span>` : ""}
+        ${t.holders ? `<span title="Holders">👥 ${t.holders}</span>` : ""}
       </div>
       <div class="tags">${tagsFor(t)}</div>
       ${posRow(t)}
@@ -188,9 +192,57 @@ $("#btn-pnl").addEventListener("click", () => {
 });
 $("#pnl-close").addEventListener("click", () => ($("#pnl-panel").hidden = true));
 
+// ---------- Discover table ----------
+function renderDiscover() {
+  const recent = store.get("recent", []);
+  let list = [...feed.tokens.values()].filter((t) => t.symbol || t.name);
+  if (home.src !== "all") list = list.filter((t) => t.src === home.src);
+  if (home.safe) list = list.filter((t) => !risky(t));
+  const tab = home.dtab;
+  if (tab === "new") list = list.filter((t) => column(t) === "new");
+  if (tab === "stretch") list = list.filter((t) => column(t) === "stretch");
+  if (tab === "migrated") list = list.filter((t) => t.migrated);
+  if (tab === "watch") list = list.filter((t) => home.stars.has(t.mint));
+  if (tab === "recent") list = recent.map((m) => feed.get(m)).filter(Boolean);
+  if (tab === "trending") list = list.filter((t) => (t.vol5m || 0) > 0);
+  const k = home.dsort;
+  if (tab !== "recent") list.sort((a, b) => k === "age" ? b.created - a.created : (b[k] ?? -1e9) - (a[k] ?? -1e9));
+  const amt = +$("#quick-amt").value || 0.1;
+  const pc = (v) => v == null ? '<td class="muted">–</td>' : `<td class="num ${v >= 0 ? "up" : "down"}">${fmt.pct(v)}</td>`;
+  $("#d-body").innerHTML = list.length ? list.slice(0, 120).map((t) => {
+    const called = feed.calls.some((c) => c.mint === t.mint);
+    return `<tr data-open="${t.mint}" tabindex="0">
+      <td><button class="mini${home.stars.has(t.mint) ? " on" : ""}" data-star="${t.mint}" aria-label="Watchlist">★</button></td>
+      <td><span class="tok"><span class="av">${avatar(t)}</span><span><b>${esc(t.symbol)}</b><br><small class="muted">${esc(t.name)}${t.migrated ? " · migrated" : ""}</small></span></span></td>
+      <td class="num"><b>${fmt.usd(t.mcUsd)}</b></td><td class="num">${fmt.age((Date.now() - t.created) / 1000)}</td>
+      ${pc(t.ch5m ?? t.chSeen)}${pc(t.ch1h)}
+      <td class="num">${fmt.usd(t.vol5m)}</td><td class="num">${t.liqUsd != null ? fmt.usd(t.liqUsd) : "–"}</td>
+      <td class="num"><span class="up">${t.buys5m ?? 0}</span> / <span class="down">${t.sells5m ?? 0}</span></td>
+      <td class="num">${t.holders ?? "–"}</td>
+      <td>${called ? '<span class="tag call">⚡ call</span>' : risky(t) ? '<span class="tag bad">risky</span>' : ""}${wallet.data?.positions[t.mint] ? '<span class="tag good">you hold</span>' : ""}</td>
+      <td><button class="qb" data-buy="${t.mint}" aria-label="Paper buy ${amt} SOL of ${esc(t.symbol)}">⚡ ${amt}</button></td></tr>`;
+  }).join("") : `<tr><td colspan="12" class="empty">${tab === "watch" ? "Your watchlist is empty. Press ★ on any token to add it." : tab === "recent" ? "Tokens you open will show here." : "No tokens yet."}</td></tr>`;
+}
+function paintView() {
+  const d = home.view === "discover";
+  $("#discover").hidden = !d; $("#board").hidden = d;
+  $(".tabs-mobile").classList.toggle("off", d);
+  $$("#home-view button").forEach((b) => b.classList.toggle("on", b.dataset.v === home.view));
+  $$("#d-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === home.dtab));
+}
+$("#home-view").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  home.view = b.dataset.v; store.set("homeView", home.view); paintView(); renderHome();
+});
+$("#d-tabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; home.dtab = b.dataset.t; paintView(); renderHome(); });
+$("#d-sort").addEventListener("change", (e) => { home.dsort = e.target.value; renderHome(); });
+$("#btn-watch").addEventListener("click", () => { home.view = "discover"; home.dtab = "watch"; store.set("homeView", "discover"); paintView(); renderHome(); });
+paintView();
+
 function renderHome() {
   if (!$("#p-home").classList.contains("on")) { renderStatus(); renderPnl(); renderTicker(); return; }
-  renderColumns(); renderFeed(); renderTicker(); renderStatus(); renderPnl();
+  if (home.view === "discover") renderDiscover(); else renderColumns();
+  renderFeed(); renderTicker(); renderStatus(); renderPnl();
 }
 feed.on(renderHome);
 setInterval(renderHome, 1000); // keeps the ages ticking

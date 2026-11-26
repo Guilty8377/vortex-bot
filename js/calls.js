@@ -94,13 +94,16 @@ function renderCalls() {
 // keep prices fresh for called tokens that have dropped off the home board
 async function pollCallPrices() {
   const ids = feed.calls.filter((c) => Date.now() - c.t < 30 * 86400e3 && !(feed.get(c.mint)?.lastDex > Date.now() - 10000))
-    .slice(0, 50).map((c) => c.mint);
+    .slice(0, 30).map((c) => c.mint);
   if (!ids.length) return;
   try {
-    const j = await (await fetch(JUP + ids.join(","))).json();
-    for (const [mint, v] of Object.entries(j)) {
+    const pairs = await (await fetch(DEX + ids.join(","))).json();
+    const best = {};
+    for (const p of pairs) { const m = p.baseToken?.address; if (m && (!best[m] || (p.liquidity?.usd || 0) > (best[m].liquidity?.usd || 0))) best[m] = p; }
+    for (const [mint, p] of Object.entries(best)) {
       const c = feed.calls.find((x) => x.mint === mint);
-      if (c && v?.usdPrice) trackCall(c, v.usdPrice * 1e9);
+      const mc = p.marketCap || p.fdv;
+      if (c && mc) trackCall(c, mc);
     }
     renderCalls();
   } catch {}

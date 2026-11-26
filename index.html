@@ -6,10 +6,16 @@
 <title>Vortex | paper trading terminal</title>
 <meta name="description" content="Vortex is a paper trading terminal for new Solana memecoins. Real live tokens, pretend money.">
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<meta name="theme-color" content="#07070a">
+<meta property="og:title" content="Vortex | paper trading terminal">
+<meta property="og:description" content="Paper trade new Solana memecoins. Real live tokens, pretend money.">
+<meta property="og:image" content="https://guilty8377.github.io/vortex-bot/img/og.png">
+<meta property="og:url" content="https://guilty8377.github.io/vortex-bot/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=13">
+<link rel="stylesheet" href="css/vortex.css?v=15">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -54,6 +60,10 @@
   <section class="page" id="p-home" aria-labelledby="home-h">
     <h1 class="sr" id="home-h">Live new tokens</h1>
     <div class="toolbar">
+      <div class="seg view-seg" id="home-view" role="group" aria-label="Home view">
+        <button data-v="trenches" class="on">Trenches</button><button data-v="discover">Discover</button>
+      </div>
+      <button type="button" class="chip" id="btn-watch">★ Watchlist</button>
       <div class="quick">
         <span class="bolt" aria-hidden="true">⚡</span>
         <label for="quick-amt">Quick buy</label>
@@ -75,7 +85,23 @@
       <button role="tab" aria-selected="false" data-col="migrated">Migrated</button>
     </div>
 
-    <div class="board">
+    <div class="discover panel" id="discover" hidden>
+      <div class="disc-bar">
+        <div class="seg" id="d-tabs" role="group" aria-label="Which tokens">
+          <button data-t="trending" class="on">Trending</button><button data-t="new">New</button><button data-t="stretch">Final stretch</button>
+          <button data-t="migrated">Migrated</button><button data-t="watch">★ Watchlist</button><button data-t="recent">Recent</button>
+        </div>
+        <label class="small muted" for="d-sort">Sort</label>
+        <select id="d-sort" class="mini-sel">
+          <option value="vol5m">Volume 5m</option><option value="mcUsd">Market cap</option><option value="age">Newest</option>
+          <option value="holders">Holders</option><option value="buys5m">Buys 5m</option><option value="ch5m">Gainers 5m</option><option value="ch1h">Gainers 1h</option>
+        </select>
+      </div>
+      <div class="disc-wrap"><table class="tbl disc"><thead><tr><th></th><th>Token</th><th>MC</th><th>Age</th><th>5m</th><th>1h</th><th>Vol 5m</th><th>Liq</th><th>Buys / sells 5m</th><th>Holders</th><th>Signal</th><th></th></tr></thead>
+        <tbody id="d-body"></tbody></table></div>
+    </div>
+
+    <div class="board" id="board">
       <aside class="col feed-col" aria-labelledby="feed-h">
         <div class="col-head"><h2 id="feed-h">Vortex signals</h2><span class="live-dot" aria-hidden="true"></span></div>
         <ol class="feed" id="feed"><li class="empty">Signals show here when a token passes the Vortex call rules.</li></ol>
@@ -143,9 +169,39 @@
         <tbody id="lb-body"></tbody></table>
     </div>
     <div class="panel">
+      <div class="col-head"><h2>Auto trading</h2><span class="small muted">paper buys made for you while Vortex is open</span></div>
+      <div class="auto-grid">
+        <div class="auto-box">
+          <h3>Dev sniper</h3><p class="small muted">Buys every new coin a chosen dev launches, the second it is made.</p>
+          <form class="auto-form" id="sn-form">
+            <label class="sr" for="sn-w">Dev wallet address</label><input id="sn-w" placeholder="Dev wallet address" required>
+            <label class="sr" for="sn-a">Amount</label><input id="sn-a" class="mini-in" type="number" min="0.01" step="0.01" value="0.1">
+            <span class="small muted">SOL</span><button class="chip">Add</button>
+          </form>
+          <ul class="auto-list" id="sn-list"></ul>
+        </div>
+        <div class="auto-box">
+          <h3>Copy trade</h3><p class="small muted">Watches a wallet every 30 seconds. When it picks up a new token Vortex paper buys it, and sells when the wallet sells.</p>
+          <form class="auto-form" id="cp-form">
+            <label class="sr" for="cp-w">Wallet to copy</label><input id="cp-w" placeholder="Wallet address" required>
+            <label class="sr" for="cp-a">Amount</label><input id="cp-a" class="mini-in" type="number" min="0.01" step="0.01" value="0.1">
+            <span class="small muted">SOL</span><button class="chip">Add</button>
+          </form>
+          <ul class="auto-list" id="cp-list"></ul>
+        </div>
+        <div class="auto-box">
+          <h3>Alerts</h3><p class="small muted">Choose what gives you a pop up. Alerts must also be on in the bottom bar.</p>
+          <label class="ck"><input type="checkbox" data-pref="calls"> New Vortex calls</label>
+          <label class="ck"><input type="checkbox" data-pref="orders"> Take profit, stop loss and limit fills</label>
+          <label class="ck"><input type="checkbox" data-pref="auto"> Sniper and copy trade buys</label>
+          <button class="chip" id="al-on">🔔 Turn alerts on</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
       <div class="col-head"><h2>KOL wallets</h2>
         <span class="small muted">Wallets from the public <a href="https://kolscan.io/leaderboard" target="_blank" rel="noopener">kolscan.io</a> leaderboard. Click a trader to see what they hold.</span></div>
-      <table class="tbl kol"><thead><tr><th></th><th>#</th><th>Trader</th><th>Wallet</th><th>SOL balance</th><th>Tokens held</th><th>Links</th></tr></thead>
+      <table class="tbl kol"><thead><tr><th></th><th>#</th><th>Trader</th><th>Wallet</th><th>SOL balance</th><th>Tokens held</th><th>Links</th><th></th></tr></thead>
         <tbody id="kol-body"></tbody></table>
     </div>
   </section>
@@ -333,6 +389,7 @@
         <div class="tabs" role="tablist" aria-label="Token details">
           <button role="tab" aria-selected="true" data-tab="trades">Live trades</button>
           <button role="tab" aria-selected="false" data-tab="holders">Holders <span id="tk-hc" class="count"></span></button>
+          <button role="tab" aria-selected="false" data-tab="bubbles">Bubble map</button>
           <button role="tab" aria-selected="false" data-tab="mine">My trades</button>
         </div>
         <div class="tab-body" id="tk-tab"></div>
@@ -342,7 +399,20 @@
           <button role="tab" aria-selected="true" data-side="buy" class="buy">Buy</button>
           <button role="tab" aria-selected="false" data-side="sell" class="sell-t">Sell</button>
         </div>
+        <div class="seg otype" id="tk-otype" role="group" aria-label="Order type">
+          <button data-o="market" class="on">Market</button><button data-o="limit">Limit</button><button data-o="dca">DCA</button>
+        </div>
         <div class="trade-box">
+          <div class="o-extra" id="tk-limit" hidden>
+            <label for="tk-lmc">Buy when market cap drops to ($)</label>
+            <input id="tk-lmc" class="full-in" type="number" min="1" step="100" placeholder="e.g. 20000">
+          </div>
+          <div class="o-extra" id="tk-dca" hidden>
+            <div class="tpsl">
+              <label>Buy every (minutes)<input id="tk-dmin" type="number" min="1" step="1" value="5"></label>
+              <label>How many times<input id="tk-dn" type="number" min="2" max="50" step="1" value="4"></label>
+            </div>
+          </div>
           <label for="tk-amt" id="tk-amt-l">Amount (SOL)</label>
           <div class="amt-row"><input id="tk-amt" type="number" min="0" step="0.01" value="0.1" inputmode="decimal"><span id="tk-unit">SOL</span></div>
           <div class="presets" id="tk-presets"></div>
@@ -356,6 +426,7 @@
           </details>
           <button class="primary" id="tk-go">Buy</button>
           <p class="small muted" id="tk-fee">1% Vortex fee included. Paper trade, no real money.</p>
+          <label class="hk"><input type="checkbox" id="tk-hk"> Hotkeys: <kbd>1</kbd>–<kbd>4</kbd> buy presets, <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd> sell 25/50/75/100%</label>
         </div>
         <div class="my-pos" id="tk-pos"></div>
       </aside>
@@ -379,7 +450,7 @@
   <ol class="pp-list" id="pnl-list"></ol>
 </aside>
 
-<aside class="chat" id="chat" hidden aria-labelledby="chat-h">
+<aside class="chat-box" id="chat" hidden aria-labelledby="chat-h">
   <div class="pp-head"><b id="chat-h">💬 Vortex help</b><button type="button" id="chat-close" aria-label="Close chat">✕</button></div>
   <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
   <form class="chat-in" id="chat-form"><label class="sr" for="chat-text">Message</label>
@@ -408,16 +479,17 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=13"></script>
-<script src="js/feed.js?v=13"></script>
-<script src="js/home.js?v=13"></script>
-<script src="js/token.js?v=13"></script>
-<script src="js/calls.js?v=13"></script>
-<script src="js/kols.js?v=13"></script>
-<script src="js/traders.js?v=13"></script>
-<script src="js/portfolio.js?v=13"></script>
-<script src="js/fees.js?v=13"></script>
-<script src="js/learn.js?v=13"></script>
-<script src="js/help.js?v=13"></script>
+<script src="js/core.js?v=15"></script>
+<script src="js/feed.js?v=15"></script>
+<script src="js/home.js?v=15"></script>
+<script src="js/token.js?v=15"></script>
+<script src="js/calls.js?v=15"></script>
+<script src="js/kols.js?v=15"></script>
+<script src="js/traders.js?v=15"></script>
+<script src="js/auto.js?v=15"></script>
+<script src="js/portfolio.js?v=15"></script>
+<script src="js/fees.js?v=15"></script>
+<script src="js/learn.js?v=15"></script>
+<script src="js/help.js?v=15"></script>
 </body>
 </html>

@@ -6,7 +6,8 @@ const JUPD = "https://datapi.jup.ag";
 const tk = {
   mint: null, asset: null, chart: null, series: null, timers: [],
   tf: store.get("tf", "1_MINUTE"), ctype: store.get("ctype", "mcap"), cstyle: store.get("cstyle", "candles"),
-  tab: "trades", side: "buy", trades: [], holders: [], holderCount: null,
+  tab: "trades", side: "buy", trades: [], holders: [], holderCount: null, otype: "market",
+  hotkeys: store.get("hotkeys", false),
 };
 
 const solscan = (a, kind = "account") => `https://solscan.io/${kind}/${a}`;
@@ -183,6 +184,8 @@ function renderTab() {
           <td class="num">${fmt.sol(h.solBalanceDisplay, 2)}</td><td>${tags.map((g) => `<span class="tag${g === "dev" || g === "sniper" || g === "insider" ? " bad" : ""}">${esc(g)}</span>`).join("")}</td></tr>`;
       }).join("")
     }</tbody></table>` : '<p class="empty">Loading holders…</p>';
+  } else if (tk.tab === "bubbles") {
+    drawBubbles();
   } else {
     const mine = (wallet.data?.trades || []).filter((x) => x.mint === tk.mint);
     el.innerHTML = mine.length ? `<table class="tbl"><thead><tr><th>When</th><th>Type</th><th>SOL</th><th>Tokens</th><th>Fee</th></tr></thead><tbody>${
@@ -203,12 +206,28 @@ function paintSide() {
   $("#tk-presets").innerHTML = (buy ? [0.1, 0.25, 0.5, 1] : [25, 50, 100]).map((v) => `<button type="button" data-v="${v}">${v}${buy ? "" : "%"}</button>`).join("");
   $("#tk-go").textContent = buy ? "Buy" : "Sell";
   $("#tk-go").className = "primary " + (buy ? "" : "sell-go");
-  $("#tk-adv").hidden = !buy;
+  $("#tk-adv").hidden = !buy || tk.otype !== "market";
+  $("#tk-otype").hidden = !buy;
+  $("#tk-limit").hidden = !buy || tk.otype !== "limit";
+  $("#tk-dca").hidden = !buy || tk.otype !== "dca";
+  $$("#tk-otype button").forEach((b) => b.classList.toggle("on", b.dataset.o === tk.otype));
+  if (buy) $("#tk-go").textContent = tk.otype === "limit" ? "Place limit buy" : tk.otype === "dca" ? "Start DCA" : "Buy";
+  if (buy) $("#tk-amt-l").textContent = tk.otype === "dca" ? "Amount each time (SOL)" : "Amount (SOL)";
+}
+$("#tk-otype").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { tk.otype = b.dataset.o; paintSide(); } });
+function pendingHtml() {
+  const lim = (wallet.data?.limits || []).filter((x) => x.mint === tk.mint);
+  const dca = (wallet.data?.dca || []).filter((x) => x.mint === tk.mint);
+  if (!lim.length && !dca.length) return "";
+  return `<h3>Waiting orders</h3>` + lim.map((l) => `<div class="row2"><span>Limit ${fmt.sol(l.sol, 2)} SOL at ${fmt.usd(l.mc)}</span>
+      <button class="mini" data-cancel="limits" data-id="${l.id}" aria-label="Cancel limit order">✕</button></div>`).join("")
+    + dca.map((d) => `<div class="row2"><span>DCA ${fmt.sol(d.sol, 2)} SOL every ${d.every}m · ${d.left} left</span>
+      <button class="mini" data-cancel="dca" data-id="${d.id}" aria-label="Cancel DCA">✕</button></div>`).join("");
 }
 function renderPos() {
   const t = feed.get(tk.mint);
   const el = $("#tk-pos");
-  if (!t || !wallet.data?.positions[t.mint]) { el.innerHTML = `<p class="small muted">Balance ${wallet.ready() ? fmt.sol(wallet.data.balance, 3) + " SOL" : "–"}</p>`; return; }
+  if (!t || !wallet.data?.positions[t.mint]) { el.innerHTML = pendingHtml() + `<p class="small muted">Balance ${wallet.ready() ? fmt.sol(wallet.data.balance, 3) + " SOL" : "–"}</p>`; return; }
   const i = posInfo(t), o = wallet.data.orders?.[t.mint];
   el.innerHTML = `<h3>Your position</h3>
     <div class="row2"><span class="muted">Cost</span><b class="num">${fmt.sol(i.p.cost, 3)} SOL</b></div>
@@ -216,14 +235,32 @@ function renderPos() {
     <div class="row2"><span class="muted">PnL</span><b class="num ${i.pnl >= 0 ? "up" : "down"}">${i.pnl >= 0 ? "▲ +" : "▼ "}${fmt.sol(i.pnl, 4)} (${i.pct?.toFixed(1)}%)</b></div>
     ${o ? `<div class="row2"><span class="muted">Auto sell</span><span class="num">${o.tp ? "TP x" + o.tp : ""} ${o.sl ? "SL −" + o.sl + "%" : ""}
       <button class="mini" id="tk-cancel" title="Cancel take profit and stop loss">✕</button></span></div>` : ""}
+    ${pendingHtml()}
     <p class="small muted">Balance ${fmt.sol(wallet.data.balance, 3)} SOL</p>`;
 }
 $$(".bs-tabs button").forEach((b) => b.addEventListener("click", () => { tk.side = b.dataset.side; paintSide(); }));
 $("#tk-presets").addEventListener("click", (e) => { const b = e.target.closest("[data-v]"); if (b) $("#tk-amt").value = b.dataset.v; });
-$("#tk-pos").addEventListener("click", (e) => { if (e.target.id === "tk-cancel") { wallet.setOrder(tk.mint, null, null); renderPos(); toast("Auto sell cancelled"); } });
+$("#tk-pos").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-cancel]");
+  if (c) { wallet.cancel(c.dataset.cancel, +c.dataset.id); renderPos(); toast("Order cancelled"); return; }
+  if (e.target.id === "tk-cancel") { wallet.setOrder(tk.mint, null, null); renderPos(); toast("Auto sell cancelled"); } });
 $("#tk-go").addEventListener("click", () => {
   const t = tkToken();
   if (!t.priceSol) return toast("Price still loading, try again in a second");
+  if (tk.side === "buy" && tk.otype === "limit") {
+    if (!wallet.ready()) return askStart();
+    const mc = +$("#tk-lmc").value, sol = +$("#tk-amt").value;
+    if (!(mc > 0) || !(sol > 0)) return toast("Enter a market cap and an amount");
+    if (t.mcUsd && mc >= t.mcUsd) return toast(`Market cap is already ${fmt.usd(t.mcUsd)}. Use Market to buy now`);
+    wallet.addLimit(t, mc, sol); toast(`Limit buy placed: ${sol} SOL when MC drops to ${fmt.usd(mc)}`); renderPos(); return;
+  }
+  if (tk.side === "buy" && tk.otype === "dca") {
+    if (!wallet.ready()) return askStart();
+    const sol = +$("#tk-amt").value, every = Math.max(1, +$("#tk-dmin").value || 5), n = Math.min(50, Math.max(2, +$("#tk-dn").value || 4));
+    if (!(sol > 0)) return toast("Enter an amount");
+    if (sol * n > wallet.data.balance) return toast(`That needs ${fmt.sol(sol * n, 2)} SOL but you have ${fmt.sol(wallet.data.balance, 2)}`);
+    wallet.addDca(t, sol, every, n); toast(`DCA started: ${sol} SOL every ${every} min, ${n} times`); renderPos(); return;
+  }
   if (tk.side === "buy") {
     if (!wallet.buy(t, $("#tk-amt").value)) return;
     const tp = +$("#tk-tp").value || null, sl = +$("#tk-sl").value || null;
@@ -236,6 +273,85 @@ $("#tk-go").addEventListener("click", () => {
   renderPos(); loadCandles(false);
   if (tk.tab === "mine") renderTab();
 });
+
+// ---------- hotkeys ----------
+$("#tk-hk").checked = tk.hotkeys;
+$("#tk-hk").addEventListener("change", (e) => { tk.hotkeys = e.target.checked; store.set("hotkeys", tk.hotkeys); toast(tk.hotkeys ? "Hotkeys on" : "Hotkeys off"); });
+document.addEventListener("keydown", (e) => {
+  if (!tk.hotkeys || !$("#p-token").classList.contains("on") || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  const t = tkToken();
+  const buys = { 1: 0.1, 2: 0.25, 3: 0.5, 4: 1 }, sells = { q: 0.25, w: 0.5, e: 0.75, r: 1 };
+  const k = e.key.toLowerCase();
+  if (buys[k]) { e.preventDefault(); if (wallet.buy(t, buys[k])) { renderPos(); loadCandles(false); } }
+  else if (sells[k]) {
+    e.preventDefault();
+    if (!wallet.data?.positions[t.mint]) return toast("You do not hold this token");
+    if (wallet.sell(t, sells[k])) { renderPos(); loadCandles(false); }
+  }
+});
+
+// ---------- bubble map ----------
+const BUB_COLORS = ["#dc143c", "#7aa7ff", "#ffb35c", "#2fe0a0", "#c084fc", "#ff6b9a", "#5eead4", "#facc15"];
+function drawBubbles() {
+  const el = $("#tk-tab");
+  if (!tk.holders.length) { el.innerHTML = '<p class="empty">Loading holders…</p>'; return; }
+  el.innerHTML = `<div class="bub-wrap"><canvas id="bub" aria-label="Bubble map of the top holders"></canvas>
+    <p class="small muted bub-key">Bubble size is how much each wallet holds. Wallets funded by the same wallet share a colour, which can mean one person controls them all. Red ring: dev, sniper or insider. Grey: pool.</p>
+    <p class="small" id="bub-tip" aria-live="polite"></p></div>`;
+  const cv = $("#bub"), box = cv.parentElement.getBoundingClientRect();
+  const W = Math.max(300, box.width - 20), H = 320, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
+  const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+  const supply = tk.asset?.totalSupply || 1e9, pool = tk.asset?.graduatedPool, dev = tk.asset?.dev;
+  const funders = {};
+  let ci = 0;
+  const nodes = tk.holders.slice(0, 60).map((h, i) => {
+    const pct = (h.amount / supply) * 100;
+    const f = h.addressInfo?.fundingAddress;
+    if (f && !(f in funders)) funders[f] = null;
+    return { h, pct, f, r: Math.max(5, Math.sqrt(pct) * 14), x: W / 2 + Math.cos(i * 2.4) * (20 + i * 4), y: H / 2 + Math.sin(i * 2.4) * (20 + i * 3),
+      isPool: h.address === pool || h.address === tk.mint, bad: h.address === dev || (h.holderTags || []).some((g) => g === "sniper" || g === "insider") };
+  });
+  // a funder only gets its own colour if it funded 2 or more of these wallets
+  const counts = {};
+  nodes.forEach((n) => { if (n.f) counts[n.f] = (counts[n.f] || 0) + 1; });
+  for (const f of Object.keys(counts)) if (counts[f] > 1) funders[f] = BUB_COLORS[ci++ % BUB_COLORS.length];
+  for (let it = 0; it < 220; it++) {
+    for (const a of nodes) {
+      a.x += (W / 2 - a.x) * 0.01; a.y += (H / 2 - a.y) * 0.01;
+      for (const b of nodes) {
+        if (a === b) continue;
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, min = a.r + b.r + 2;
+        if (d < min) { const m = (min - d) / 2; a.x -= (dx / d) * m; a.y -= (dy / d) * m; b.x += (dx / d) * m; b.y += (dy / d) * m; }
+        else if (a.f && a.f === b.f && funders[a.f]) { a.x += dx * 0.002; a.y += dy * 0.002; }
+      }
+      a.x = Math.max(a.r, Math.min(W - a.r, a.x)); a.y = Math.max(a.r, Math.min(H - a.r, a.y));
+    }
+  }
+  const draw = (hover) => {
+    ctx.clearRect(0, 0, W, H);
+    // lines between wallets with the same funder
+    ctx.lineWidth = 1;
+    for (const a of nodes) for (const b of nodes) if (a !== b && a.f && a.f === b.f && funders[a.f] && a.h.address < b.h.address) {
+      ctx.strokeStyle = funders[a.f] + "66"; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    for (const n of nodes) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.isPool ? "#3a3640" : (funders[n.f] || "#2a2530") + (n === hover ? "" : "cc");
+      ctx.fill();
+      ctx.lineWidth = n.bad ? 3 : 1; ctx.strokeStyle = n.bad ? "#ff6b9a" : "#0e0d11"; ctx.stroke();
+      if (n.r > 14) { ctx.fillStyle = "#fff"; ctx.font = "600 10px IBM Plex Mono"; ctx.textAlign = "center"; ctx.fillText(n.pct.toFixed(1) + "%", n.x, n.y + 3); }
+    }
+  };
+  draw();
+  const hit = (ev) => { const r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top; return nodes.find((n) => Math.hypot(n.x - x, n.y - y) <= n.r); };
+  cv.addEventListener("mousemove", (ev) => {
+    const n = hit(ev); draw(n); cv.style.cursor = n ? "pointer" : "default";
+    $("#bub-tip").textContent = n ? `${fmt.short(n.h.address)} holds ${n.pct.toFixed(2)}%${n.isPool ? " (pool)" : ""}${n.bad ? " · dev / sniper / insider" : ""}${n.f && funders[n.f] ? " · funded by " + fmt.short(n.f) + ", same as other wallets" : ""}` : "";
+  });
+  cv.addEventListener("click", (ev) => { const n = hit(ev); if (n) window.open("https://solscan.io/account/" + n.h.address, "_blank", "noopener"); });
+}
 
 // ---------- controls ----------
 function segClick(id, key, attr, after) {
@@ -264,6 +380,7 @@ pages.token = {
     stopToken();
     if (!mint || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(mint)) { location.hash = "#home"; return; }
     const changed = mint !== tk.mint;
+    store.set("recent", [mint, ...store.get("recent", []).filter((m) => m !== mint)].slice(0, 30));
     tk.mint = mint;
     if (changed) { tk.asset = null; tk.trades = []; tk.holders = []; $("#tk-checks").innerHTML = '<li class="empty">Loading…</li>'; $("#tk-tab").innerHTML = ""; }
     tkToken(); renderHead(); paintSide(); renderTab(); renderPos();

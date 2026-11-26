@@ -97,7 +97,7 @@ function renderKols() {
   const list = [...KOLS].sort((a, b) => tr.follow.has(b.wallet) - tr.follow.has(a.wallet));
   $("#kol-body").innerHTML = list.map((k) => {
     const i = KOLS.indexOf(k) + 1, open = tr.open === k.wallet, h = tr.holds[k.wallet];
-    const row = `<tr class="row${open ? " open" : ""}" data-kol="${k.wallet}" tabindex="0" aria-expanded="${open}">
+    const row = `<tr class="row${open ? " open" : ""}" data-kol="${k.wallet}" tabindex="0" aria-label="${esc(k.name)}, ${open ? "hide" : "show"} holdings">
       <td><button class="star${tr.follow.has(k.wallet) ? " on" : ""}" data-follow="${k.wallet}" aria-label="Follow ${esc(k.name)}">★</button></td>
       <td class="muted">${i}</td>
       <td><span class="who"><span class="ph">${esc(k.name[0])}</span>${esc(k.name)}</span></td>
@@ -105,10 +105,11 @@ function renderKols() {
       <td class="num">${tr.bal[k.wallet] != null ? fmt.sol(tr.bal[k.wallet], 2) + " SOL" : "…"}</td>
       <td class="num">${h?.bags ? h.bags.length + " worth $50+" : open ? "loading…" : "click to see"}</td>
       <td class="links"><a href="https://solscan.io/account/${k.wallet}" target="_blank" rel="noopener">Solscan</a>
-        <a href="https://kolscan.io/account/${k.wallet}" target="_blank" rel="noopener">Kolscan</a></td></tr>`;
+        <a href="https://kolscan.io/account/${k.wallet}" target="_blank" rel="noopener">Kolscan</a></td>
+      <td><button class="chip small-chip" data-copytrade="${k.wallet}" data-name="${esc(k.name)}">Copy</button></td></tr>`;
     if (!open) return row;
     const bags = h?.bags;
-    return row + `<tr class="hold-row"><td colspan="7">${!bags ? '<p class="empty">Checking what this wallet holds…</p>'
+    return row + `<tr class="hold-row"><td colspan="8">${!bags ? '<p class="empty">Checking what this wallet holds…</p>'
       : bags.length ? `<div class="holds">${bags.map((b) => `<div class="hold" data-open="${b.mint}">
           <span class="av">${b.icon ? `<img src="${esc(b.icon)}" alt="" loading="lazy">` : `<span class="ph">${esc(b.symbol[0])}</span>`}</span>
           <div><b>${esc(b.symbol)}</b><span class="num">MC ${fmt.usd(b.mc)}</span></div>
@@ -128,7 +129,7 @@ document.addEventListener("click", (e) => {
     return;
   }
   const r = e.target.closest("[data-kol]");
-  if (!r || e.target.closest("a,[data-copy]")) return;
+  if (!r || e.target.closest("a,[data-copy],[data-copytrade]")) return;
   const w = r.dataset.kol;
   tr.open = tr.open === w ? null : w;
   renderKols();

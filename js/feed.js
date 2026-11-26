@@ -16,7 +16,7 @@ const feed = {
   tokens: new Map(),
   solUsd: store.get("solUsd", null),
   connected: false,
-  calls: store.get("calls", []),
+  calls: store.get("calls", []).filter((c) => c.hits),
   listeners: new Set(),
   on(fn) { this.listeners.add(fn); },
   emit() {
@@ -93,6 +93,7 @@ function onCreate(m) {
   });
   if (feed.solUsd && t.mcSol) t.mcUsd = t.mcSol * feed.solUsd;
   metaQueue.push(t.mint);
+  feed.onCreate?.(t);
   trim();
   feed.emit();
 }
@@ -128,8 +129,12 @@ setInterval(() => {
 const dexSoon = new Set();
 async function pollDex() {
   const now = Date.now();
-  const pick = [...dexSoon];
+  // tokens you hold or starred always get fresh prices
+  const must = [...Object.keys(wallet.data?.positions || {}), ...store.get("stars", []),
+    ...(wallet.data?.limits || []).map((l) => l.mint), ...(wallet.data?.dca || []).map((d) => d.mint)];
+  const pick = [...new Set([...dexSoon, ...must.filter((m) => !feed.tokens.get(m) || now - (feed.tokens.get(m).lastDex || 0) > 6000)])].slice(0, 15);
   dexSoon.clear();
+  must.forEach((m) => { if (!feed.tokens.has(m)) upsert(m, { created: now - 3600e3 }); });
   const candidates = [...feed.tokens.values()]
     .filter((t) => !pick.includes(t.mint) && now - t.created > 8000)
     .sort((a, b) => (a.lastDex - b.lastDex) || (b.created - a.created));
@@ -159,7 +164,7 @@ function applyPair(mint, p) {
   const migrated = t.migrated || (p.dexId && p.dexId !== "pumpfun" && t.src === "pump" && t.mint.endsWith("pump"));
   upsert(mint, {
     symbol: t.symbol || p.baseToken.symbol, name: t.name || p.baseToken.name,
-    image: t.image || p.info?.imageUrl || "", priceUsd, priceSol,
+    image: p.info?.imageUrl || t.image || "", priceUsd, priceSol,
     mcUsd: p.marketCap || p.fdv || t.mcUsd, mcSol: priceSol ? priceSol * 1e9 : t.mcSol,
     vol5m: p.volume?.m5 ?? 0, vol1h: p.volume?.h1 ?? 0, buys5m: p.txns?.m5?.buys ?? 0, sells5m: p.txns?.m5?.sells ?? 0,
     liqUsd: p.liquidity?.usd ?? null, ch5m: p.priceChange?.m5 ?? null, ch1h: p.priceChange?.h1 ?? null,
@@ -175,6 +180,14 @@ function applyPair(mint, p) {
 }
 // Jupiter's free price API knows brand-new tokens before DexScreener lists them
 const JUP = "https://lite-api.jup.ag/price/v3?ids=";
+let jupWait = 0; // time until we may call Jupiter again after a 429
+async function jupFetch(url) {
+  if (Date.now() < jupWait) throw new Error("waiting");
+  const r = await fetch(url);
+  if (r.status === 429) { jupWait = Date.now() + 20000; throw new Error("429"); }
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
 async function pollJup() {
   const held = Object.keys(wallet.data?.positions || {});
   const ids = [...new Set([...held, ...[...feed.tokens.values()].filter((t) => !t.dexId && !t.migrated)
@@ -182,16 +195,14 @@ async function pollJup() {
   held.forEach((m) => { if (!feed.tokens.has(m)) { const p = wallet.data.positions[m]; upsert(m, { symbol: p.symbol, name: p.name, image: p.image, created: Date.now() - 3600e3 }); } });
   if (!ids.length) return;
   try {
-    const r = await fetch(JUP + ids.join(","));
-    if (!r.ok) return;
-    const j = await r.json();
+    const j = await jupFetch(JUP + ids.join(","));
     for (const [mint, v] of Object.entries(j)) {
       const t = feed.tokens.get(mint);
       if (!t || !v?.usdPrice || (t.dexId && Date.now() - t.lastDex < 8000)) continue;
       const old = t.priceUsd;
       const priceSol = feed.solUsd ? v.usdPrice / feed.solUsd : t.priceSol;
       upsert(mint, { priceUsd: v.usdPrice, priceSol, mcUsd: v.usdPrice * 1e9, mcSol: priceSol ? priceSol * 1e9 : t.mcSol,
-        liqUsd: v.liquidity ?? t.liqUsd, ch5m: old ? ((v.usdPrice - t.firstUsd) / t.firstUsd) * 100 : t.ch5m });
+        liqUsd: v.liquidity ?? t.liqUsd, chSeen: old && t.firstUsd ? ((v.usdPrice - t.firstUsd) / t.firstUsd) * 100 : t.chSeen });
       t.firstUsd ||= v.usdPrice;
     }
     feed.emit();
@@ -221,8 +232,8 @@ function checkCall(t) {
   feed.calls.unshift(c);
   feed.calls = feed.calls.slice(0, 200);
   saveCalls();
-  sound.call();
-  notify.send(`Vortex call: ${t.symbol}`, c.reason, t.image);
+  if (notify.wants("calls")) sound.call();
+  notify.send(`Vortex call: ${t.symbol}`, c.reason, t.image, "calls");
 }
 // remember the first time each call reached x2, x3, -30% and -40% so strategies can be tested fairly
 const CALL_MARKS = { x1_3: 1.3, x2: 2, x3: 3, d30: 0.7, d40: 0.6 };
@@ -263,7 +274,24 @@ if (feed.solUsd) $("#st-sol").textContent = "SOL $" + feed.solUsd.toFixed(2);
 connect();
 pollSol();
 setInterval(pollDex, 2500);
-setInterval(pollJup, 3000);
+setInterval(pollJup, 4000);
+
+// logos for tokens that still have none, from Jupiter's token list (different server from the price API)
+async function pollIcons() {
+  const need = [...feed.tokens.values()].filter((t) => !t.image && !t.iconTried && Date.now() - t.created > 15000).slice(0, 20);
+  if (!need.length) return;
+  need.forEach((t) => (t.iconTried = true));
+  try {
+    const j = await (await fetch("https://datapi.jup.ag/v1/assets/search?query=" + need.map((t) => t.mint).join(","))).json();
+    for (const a of j || []) {
+      const t = feed.tokens.get(a.id);
+      if (t && a.icon && !t.image) t.image = a.icon;
+      if (t && a.holderCount) t.holders = a.holderCount;
+    }
+    feed.emit();
+  } catch {}
+}
+setInterval(pollIcons, 6000);
 setInterval(() => document.visibilityState === "visible" && pollSol(), 60000);
 setInterval(snapshot, 15000);
 setInterval(() => wallet.checkOrders((m) => feed.tokens.get(m)), 2000); // also runs when the tab is in the background

@@ -137,7 +137,43 @@ wallet.setOrder = function (mint, tp, sl) {
   else this.data.orders[mint] = { tp: tp || null, sl: sl || null };
   this.save();
 };
+// limit buys and DCA (buy a bit every few minutes)
+wallet.addLimit = function (tok, mc, sol) {
+  (this.data.limits ||= []).push({ id: Date.now(), mint: tok.mint, symbol: tok.symbol, name: tok.name, image: tok.image, mc, sol, t: Date.now() });
+  this.save();
+};
+wallet.addDca = function (tok, sol, every, count) {
+  (this.data.dca ||= []).push({ id: Date.now(), mint: tok.mint, symbol: tok.symbol, name: tok.name, image: tok.image, sol, every, left: count, next: Date.now() });
+  this.save();
+};
+wallet.cancel = function (kind, id) {
+  this.data[kind] = (this.data[kind] || []).filter((x) => x.id !== id);
+  this.save();
+};
+wallet.checkPending = function (getTok) {
+  if (!this.data) return;
+  for (const l of [...(this.data.limits || [])]) {
+    const t = getTok(l.mint);
+    if (t?.mcUsd && t.priceSol && t.mcUsd <= l.mc) {
+      this.cancel("limits", l.id);
+      if (this.buy(t, l.sol)) {
+        if (l.copy) { (this.data.copied ||= {})[t.mint] = l.copy; this.save(); notify.send("Vortex copy trade", `Copied ${l.copyName || "wallet"}: bought ${t.symbol}`, t.image, "auto"); }
+        else notify.send("Vortex limit buy filled", `${t.symbol} at ${fmt.usd(t.mcUsd)}`, t.image, "orders");
+      }
+    }
+  }
+  for (const d of [...(this.data.dca || [])]) {
+    if (Date.now() < d.next) continue;
+    const t = getTok(d.mint);
+    if (!t?.priceSol) continue;
+    d.left--; d.next = Date.now() + d.every * 60000;
+    if (!this.buy(t, d.sol)) d.left = 0;
+    if (d.left <= 0) this.cancel("dca", d.id); else this.save();
+  }
+};
+
 wallet.checkOrders = function (getTok) {
+  this.checkPending(getTok);
   const o = this.data?.orders;
   if (!o) return;
   for (const [mint, ord] of Object.entries(o)) {
@@ -150,7 +186,7 @@ wallet.checkOrders = function (getTok) {
       delete o[mint];
       this.sell(t, 1);
       const msg = `${hitTp ? "Take profit" : "Stop loss"} sold ${t.symbol} at x${x.toFixed(2)}`;
-      toast(msg); notify.send("Vortex " + (hitTp ? "take profit" : "stop loss"), msg, t.image);
+      toast(msg); notify.send("Vortex " + (hitTp ? "take profit" : "stop loss"), msg, t.image, "orders");
     }
   }
 };
@@ -207,8 +243,11 @@ const notify = {
     } else store.set("notify", !store.get("notify", true));
     this.paint();
   },
-  send(title, body, icon) {
-    if (!this.on()) return;
+  prefs: store.get("alertPrefs", { calls: true, orders: true, auto: true }),
+  wants(kind) { return !kind || this.prefs[kind] !== false; },
+  setPref(kind, v) { this.prefs[kind] = v; store.set("alertPrefs", this.prefs); },
+  send(title, body, icon, kind) {
+    if (!this.on() || !this.wants(kind)) return;
     try { new Notification(title, { body, icon: icon || "img/logo.svg" }); } catch {}
   },
 };
