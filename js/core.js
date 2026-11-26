@@ -6,7 +6,17 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const FEE = 0.01; // Vortex fee: 1% on every paper buy and sell
+// referral: anyone who opens Vortex from a ?ref= link gets 10% off fees for good
+(function () {
+  try {
+    const r = new URLSearchParams(location.search).get("ref");
+    if (r && /^[a-z0-9]{4,12}$/i.test(r) && !localStorage.getItem("vx-ref") && localStorage.getItem("vx-myref") !== JSON.stringify(r)) localStorage.setItem("vx-ref", JSON.stringify(r));
+  } catch {}
+})();
+const BASE_FEE = 0.01; // Vortex fee: 1% on every paper buy and sell
+const REF_DISCOUNT = 0.1; // referred users pay 10% less
+const FEE = store_get_raw("ref") ? BASE_FEE * (1 - REF_DISCOUNT) : BASE_FEE;
+function store_get_raw(k) { try { return JSON.parse(localStorage.getItem("vx-" + k)); } catch { return null; } }
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem("vx-" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },

@@ -143,4 +143,3 @@ pages.portfolio = {
   },
 };
 
-route();

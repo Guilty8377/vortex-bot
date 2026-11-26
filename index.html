@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=10">
+<link rel="stylesheet" href="css/vortex.css?v=11">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -172,7 +172,64 @@
       <div id="pf-trades"></div>
     </div>
   </section>
-  <section class="page soon" id="p-fees"><h1>Fees</h1><p>Coming soon.</p></section>
+  <section class="page" id="p-fees" aria-labelledby="fees-h">
+    <div class="fee-hero panel">
+      <div>
+        <p class="eyebrow">Pricing</p>
+        <h1 id="fees-h">Vortex is free to use</h1>
+        <p class="muted">No subscription and no sign up fee. Every feature is included. Vortex only takes a small fee when you trade, and it is shown on every trade so there are no surprises.</p>
+      </div>
+      <div class="fee-big"><b id="fee-now">1%</b><span>per buy and per sell</span></div>
+    </div>
+    <div class="fee-grid">
+      <div class="panel fee-card">
+        <h2>Every feature, £0</h2>
+        <ul class="ticks">
+          <li>Live new, final stretch and migrated tokens</li>
+          <li>Safety check on every token</li>
+          <li>Vortex calls with alerts</li>
+          <li>Chart, live trades and holders</li>
+          <li>Take profit and stop loss</li>
+          <li>KOL wallet tracker</li>
+          <li>Portfolio, PnL and CSV export</li>
+        </ul>
+      </div>
+      <div class="panel fee-card">
+        <h2>What you pay</h2>
+        <ul class="ticks">
+          <li><b>1%</b> on every buy</li>
+          <li><b>1%</b> on every sell</li>
+          <li><b>Nothing</b> on top when a trade loses</li>
+          <li><b>10% off</b> fees if you join with a friend's link</li>
+          <li>Plus the Solana network fee, which goes to the network, not Vortex</li>
+        </ul>
+        <p class="small muted">On this paper trading site no real money moves. The fee is taken from your pretend balance so your results are realistic.</p>
+      </div>
+      <div class="panel fee-card">
+        <h2>Fee calculator</h2>
+        <label for="calc-amt" class="small muted">If I buy with</label>
+        <div class="amt-row"><input id="calc-amt" type="number" min="0" step="0.1" value="1"><span>SOL</span></div>
+        <label for="calc-x" class="small muted">and sell when it is worth</label>
+        <div class="amt-row"><span>x</span><input id="calc-x" type="number" min="0" step="0.1" value="2"></div>
+        <div class="calc-out" id="calc-out"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>How it compares</h2><span class="small muted">fee per buy and per sell</span></div>
+      <table class="tbl"><thead><tr><th></th><th>Trading fee</th><th>Subscription</th><th>Fee on 1 SOL in and out</th></tr></thead>
+        <tbody id="cmp-body"></tbody></table>
+      <p class="small muted" style="padding:0 12px 10px">Mako fee taken from makobot.app, 25 Nov 2026.</p>
+    </div>
+    <div class="panel ref-panel">
+      <div class="col-head"><h2>Invite friends</h2></div>
+      <div class="ref-body">
+        <p>Share your link. Anyone who opens Vortex with it gets <b>10% off fees</b> for good.</p>
+        <div class="ref-row"><input id="ref-link" readonly aria-label="Your referral link"><button class="primary" id="ref-copy">Copy link</button></div>
+        <p class="small muted" id="ref-status"></p>
+        <p class="small muted">Referral earnings need user accounts, which this paper version does not have, so only the discount works for now.</p>
+      </div>
+    </div>
+  </section>
   <section class="page soon" id="p-learn"><h1>Learn</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-help"><h1>Help</h1><p>Coming soon.</p></section>
   <section class="page" id="p-token" aria-labelledby="tk-sym">
@@ -279,13 +336,14 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=10"></script>
-<script src="js/feed.js?v=10"></script>
-<script src="js/home.js?v=10"></script>
-<script src="js/token.js?v=10"></script>
-<script src="js/calls.js?v=10"></script>
-<script src="js/kols.js?v=10"></script>
-<script src="js/traders.js?v=10"></script>
-<script src="js/portfolio.js?v=10"></script>
+<script src="js/core.js?v=11"></script>
+<script src="js/feed.js?v=11"></script>
+<script src="js/home.js?v=11"></script>
+<script src="js/token.js?v=11"></script>
+<script src="js/calls.js?v=11"></script>
+<script src="js/kols.js?v=11"></script>
+<script src="js/traders.js?v=11"></script>
+<script src="js/portfolio.js?v=11"></script>
+<script src="js/fees.js?v=11"></script>
 </body>
 </html>
