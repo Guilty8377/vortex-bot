@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=9">
+<link rel="stylesheet" href="css/vortex.css?v=10">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -149,7 +149,29 @@
         <tbody id="kol-body"></tbody></table>
     </div>
   </section>
-  <section class="page soon" id="p-portfolio"><h1>Portfolio</h1><p>Coming soon.</p></section>
+  <section class="page" id="p-portfolio" aria-labelledby="pf-h">
+    <h1 class="sr" id="pf-h">Portfolio</h1>
+    <div class="pf-stats" id="pf-stats"></div>
+    <div class="pf-grid">
+      <div class="panel">
+        <div class="col-head"><h2>My paper wallet</h2><span class="small muted">pretend SOL, saved in this browser only</span></div>
+        <div class="pf-wallet" id="pf-wallet"></div>
+      </div>
+      <div class="panel">
+        <div class="col-head"><h2>Total value over time</h2><span class="small muted" id="pf-eq-note"></span></div>
+        <div id="pf-chart" class="pf-chart" role="img" aria-label="Chart of total paper value over time"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>Positions <span class="count" id="pf-npos"></span></h2><span class="small muted" id="pf-clock"></span></div>
+      <div id="pf-pos"></div>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>Latest trades <span class="count" id="pf-ntr"></span></h2>
+        <button class="chip" id="pf-csv">⬇ Export CSV</button></div>
+      <div id="pf-trades"></div>
+    </div>
+  </section>
   <section class="page soon" id="p-fees"><h1>Fees</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-learn"><h1>Learn</h1><p>Coming soon.</p></section>
   <section class="page soon" id="p-help"><h1>Help</h1><p>Coming soon.</p></section>
@@ -257,12 +279,13 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=9"></script>
-<script src="js/feed.js?v=9"></script>
-<script src="js/home.js?v=9"></script>
-<script src="js/token.js?v=9"></script>
-<script src="js/calls.js?v=9"></script>
-<script src="js/kols.js?v=9"></script>
-<script src="js/traders.js?v=9"></script>
+<script src="js/core.js?v=10"></script>
+<script src="js/feed.js?v=10"></script>
+<script src="js/home.js?v=10"></script>
+<script src="js/token.js?v=10"></script>
+<script src="js/calls.js?v=10"></script>
+<script src="js/kols.js?v=10"></script>
+<script src="js/traders.js?v=10"></script>
+<script src="js/portfolio.js?v=10"></script>
 </body>
 </html>

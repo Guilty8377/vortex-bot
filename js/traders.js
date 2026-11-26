@@ -144,4 +144,3 @@ pages.traders = {
   },
 };
 
-route();
