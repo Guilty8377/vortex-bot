@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vortex.css?v=11">
+<link rel="stylesheet" href="css/vortex.css?v=12">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -230,7 +230,24 @@
       </div>
     </div>
   </section>
-  <section class="page soon" id="p-learn"><h1>Learn</h1><p>Coming soon.</p></section>
+  <section class="page" id="p-learn" aria-labelledby="learn-h">
+    <div class="risk" role="note">
+      <b>⚠ Read this first.</b> Most new memecoins lose almost all of their value, often within hours.
+      Only ever trade with money you can afford to lose. Vortex is paper trading, so practise here first.
+    </div>
+    <div class="ln-grid">
+      <aside class="panel ln-side">
+        <div class="col-head"><h1 id="learn-h">New to memecoins? Start here</h1></div>
+        <div class="ln-prog"><div class="bar" id="ln-prog"></div><span class="small muted" id="ln-prog-t"></span></div>
+        <ol class="ln-list" id="ln-list"></ol>
+      </aside>
+      <article class="panel ln-body" id="ln-body"></article>
+    </div>
+    <div class="panel">
+      <div class="col-head"><h2>Glossary</h2><input class="col-search" id="gl-q" placeholder="Search words" aria-label="Search the glossary"></div>
+      <dl class="gl" id="gl-list"></dl>
+    </div>
+  </section>
   <section class="page soon" id="p-help"><h1>Help</h1><p>Coming soon.</p></section>
   <section class="page" id="p-token" aria-labelledby="tk-sym">
     <div class="tk-head">
@@ -336,14 +353,15 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=11"></script>
-<script src="js/feed.js?v=11"></script>
-<script src="js/home.js?v=11"></script>
-<script src="js/token.js?v=11"></script>
-<script src="js/calls.js?v=11"></script>
-<script src="js/kols.js?v=11"></script>
-<script src="js/traders.js?v=11"></script>
-<script src="js/portfolio.js?v=11"></script>
-<script src="js/fees.js?v=11"></script>
+<script src="js/core.js?v=12"></script>
+<script src="js/feed.js?v=12"></script>
+<script src="js/home.js?v=12"></script>
+<script src="js/token.js?v=12"></script>
+<script src="js/calls.js?v=12"></script>
+<script src="js/kols.js?v=12"></script>
+<script src="js/traders.js?v=12"></script>
+<script src="js/portfolio.js?v=12"></script>
+<script src="js/fees.js?v=12"></script>
+<script src="js/learn.js?v=12"></script>
 </body>
 </html>

@@ -37,4 +37,3 @@ $("#ref-copy").addEventListener("click", () => {
 });
 pages.fees = { open() { stopToken(); renderFees(); } };
 
-route();
