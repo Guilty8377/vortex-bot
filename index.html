@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://guilty8377.github.io/vortex-bot/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="fonts/manrope-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/vortex.css?v=20">
+<link rel="stylesheet" href="css/vortex.css?v=21">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -456,15 +456,57 @@
   </section>
 </main>
 
-<footer class="status" aria-label="Status">
-  <span class="st-live" id="st-live"><span class="dot"></span> Connecting…</span>
-  <span id="st-sol">SOL –</span>
-  <span id="st-count">0 tokens tracked</span>
-  <span class="grow"></span>
-  <button type="button" class="st-btn" id="btn-notify">🔔 Alerts off</button>
-  <button type="button" class="st-btn pnl" id="btn-pnl">PnL –</button>
-  <button type="button" class="st-btn chat" id="btn-chat" aria-label="Live chat">💬</button>
+<footer class="status" aria-label="Status bar">
+  <div class="sb-left">
+    <button type="button" class="sb-preset" id="sb-preset" title="Trading preset: click to switch">P1</button>
+    <button type="button" class="sb-wallet" id="sb-wallet" title="Your paper wallet">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1Zm0 0 1-2h8"/><circle cx="11" cy="8.5" r=".9"/></svg>
+      <span id="sb-bal">–</span> SOL <span class="sb-pos" id="sb-pos"></span></button>
+    <button type="button" class="sb-ic" id="sb-gear" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg></button>
+    <span class="sb-sep" aria-hidden="true"></span>
+    <nav class="sb-links" aria-label="Shortcuts">
+      <a class="sb-ic" href="#traders" title="Wallet tracker" aria-label="Wallet tracker"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.6-2.5 2.4-4 4.5-4s3.9 1.5 4.5 4M11 3.5a2.3 2.3 0 0 1 0 4.4M12.5 9.7c1 .7 1.7 2 2 3.8"/></svg></a>
+      <a class="sb-ic" href="#calls" title="Vortex calls" aria-label="Vortex calls"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8z"/></svg></a>
+      <button type="button" class="sb-ic" id="sb-discover" title="Discover table" aria-label="Discover table"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M2 6h12M2 9.5h12M6.5 2.5v11"/></svg></button>
+      <button type="button" class="sb-ic" id="sb-watch" title="Watchlist" aria-label="Watchlist"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m8 2 1.8 3.8 4.2.5-3.1 2.9.8 4.1L8 11.3l-3.7 2 .8-4.1L2 6.3l4.2-.5z"/></svg></button>
+      <a class="sb-ic" href="#portfolio" title="Portfolio" aria-label="Portfolio"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13.5h12M3.5 11V8M6.5 11V5M9.5 11V7M12.5 11V3.5"/></svg></a>
+      <button type="button" class="sb-ic" id="sb-filters" title="Filters" aria-label="Filters"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12M4.5 8h7M7 12.5h2"/></svg></button>
+      <a class="sb-ic" href="#learn" title="Learn" aria-label="Learn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5c2-.8 4-.8 6 .5 2-1.3 4-1.3 6-.5v9c-2-.8-4-.8-6 .5-2-1.3-4-1.3-6-.5zM8 4v9"/></svg></a>
+    </nav>
+    <span class="sb-sep" aria-hidden="true"></span>
+    <span class="sb-chip" id="sb-feeds" title="Live data sources"><i class="dot" id="sb-dot-pump"></i>Pump <i class="dot" id="sb-dot-dex"></i>Dex <i class="dot" id="sb-dot-jup"></i>Jup</span>
+    <span class="sb-prices" id="sb-prices">
+      <span class="pr btc" title="Bitcoin price"><b>₿</b> <span id="pr-btc">–</span></span>
+      <span class="pr eth" title="Ethereum price"><b>Ξ</b> <span id="pr-eth">–</span></span>
+      <span class="pr sol" title="Solana price"><b>◎</b> <span id="st-sol">–</span></span>
+    </span>
+  </div>
+  <div class="sb-right">
+    <span class="sb-stat" title="New tokens launched in the last minute"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V6M5 9l3-3 3 3M3.5 2.5h9"/></svg><span id="sb-rate">–</span>/min</span>
+    <span class="sb-stat" id="st-count" title="Tokens tracked live">0 tracked</span>
+    <span class="sb-stat" title="How fast Vortex gets prices"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 11a5.5 5.5 0 1 1 11 0M8 11l2.5-3.5"/></svg><span id="sb-ping">–</span></span>
+    <span class="st-live" id="st-live"><span class="dot"></span> Connecting…</span>
+    <span class="sb-sep" aria-hidden="true"></span>
+    <button type="button" class="st-btn pnl" id="btn-pnl">PnL –</button>
+    <button type="button" class="sb-ic" id="btn-notify" title="Alerts" aria-label="Alerts"></button>
+    <button type="button" class="sb-ic" id="sb-theme" title="Light or dark mode" aria-label="Light or dark mode"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" class="fill"/></svg></button>
+    <a class="sb-ic" href="https://github.com/Guilty8377/vortex-bot" target="_blank" rel="noopener" title="Code on GitHub" aria-label="Code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 12.5c-2.5.8-2.5-1.3-3.5-1.5m7 3v-2.2c0-.7.1-1.1-.4-1.5 1.9-.2 3.9-.9 3.9-4.1 0-.9-.3-1.6-.9-2.2.1-.2.4-1.1-.1-2.2 0 0-.7-.2-2.3.9a7.6 7.6 0 0 0-4.2 0C3.4 1.6 2.7 1.8 2.7 1.8c-.5 1.1-.2 2-.1 2.2-.6.6-.9 1.3-.9 2.2 0 3.2 2 3.9 3.9 4.1-.4.4-.5.8-.5 1.3v2.4"/></svg></a>
+    <button type="button" class="sb-ic" id="sb-bug" title="Report a problem" aria-label="Report a problem"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="6" height="8" rx="3"/><path d="M8 5V3.5M6 3.5l-1-1M10 3.5l1-1M5 8H2.5M11 8h2.5M5 11l-2 1.5M11 11l2 1.5"/></svg></button>
+    <button type="button" class="st-btn chat" id="btn-chat" aria-label="Live chat">💬</button>
+  </div>
 </footer>
+<div class="sb-pop" id="sb-pop" hidden role="dialog" aria-label="Settings">
+  <h3>Trading presets</h3>
+  <p class="small muted">The quick buy amount for P1, P2 and P3. Click P1 in the bottom bar to switch.</p>
+  <div class="sb-pres" id="sb-pres"></div>
+  <h3>Settings</h3>
+  <label class="ck"><input type="checkbox" id="set-sound"> Sounds</label>
+  <label class="ck"><input type="checkbox" id="set-big"> Bigger text</label>
+  <label class="ck"><input type="checkbox" id="set-light"> Light mode</label>
+  <label class="ck"><input type="checkbox" id="set-hk"> Hotkeys on token pages</label>
+  <button class="chip" id="sb-tour">Take the tour again</button>
+</div>
 
 <aside class="pnl-panel" id="pnl-panel" hidden aria-label="Your positions">
   <div class="pp-head"><b>Your positions</b><button type="button" id="pnl-close" aria-label="Close">✕</button></div>
@@ -509,19 +551,20 @@
 </dialog>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-<script src="js/core.js?v=20"></script>
-<script src="js/feed.js?v=20"></script>
-<script src="js/home.js?v=20"></script>
-<script src="js/filters.js?v=20"></script>
-<script src="js/token.js?v=20"></script>
-<script src="js/calls.js?v=20"></script>
-<script src="js/kols.js?v=20"></script>
-<script src="js/traders.js?v=20"></script>
-<script src="js/auto.js?v=20"></script>
-<script src="js/portfolio.js?v=20"></script>
-<script src="js/fees.js?v=20"></script>
-<script src="js/learn.js?v=20"></script>
-<script src="js/help.js?v=20"></script>
-<script src="js/extras.js?v=20"></script>
+<script src="js/core.js?v=21"></script>
+<script src="js/feed.js?v=21"></script>
+<script src="js/home.js?v=21"></script>
+<script src="js/filters.js?v=21"></script>
+<script src="js/token.js?v=21"></script>
+<script src="js/calls.js?v=21"></script>
+<script src="js/kols.js?v=21"></script>
+<script src="js/traders.js?v=21"></script>
+<script src="js/auto.js?v=21"></script>
+<script src="js/portfolio.js?v=21"></script>
+<script src="js/fees.js?v=21"></script>
+<script src="js/learn.js?v=21"></script>
+<script src="js/help.js?v=21"></script>
+<script src="js/extras.js?v=21"></script>
+<script src="js/statusbar.js?v=21"></script>
 </body>
 </html>

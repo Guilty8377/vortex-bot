@@ -167,7 +167,7 @@ function renderTicker() {
 }
 
 function renderStatus() {
-  $("#st-count").textContent = feed.tokens.size + " tokens tracked";
+  $("#st-count").textContent = feed.tokens.size + " tracked";
   if (wallet.ready()) {
     const total = wallet.data.balance + wallet.value((m) => feed.get(m));
     const pnl = total - wallet.data.start;

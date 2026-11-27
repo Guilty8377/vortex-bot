@@ -28,6 +28,7 @@ const feed = {
     });
   },
   get(mint) { return this.tokens.get(mint); },
+  launches: [], health: {}, ping: null,
 };
 
 // ---------- token helpers ----------
@@ -85,6 +86,8 @@ function reconnect() {
   retry = Math.min(retry * 2, 30000);
 }
 function onCreate(m) {
+  feed.launches.push(Date.now());
+  feed.health.pump = Date.now();
   const t = upsert(m.mint, {
     symbol: (m.symbol || "").slice(0, 16), name: (m.name || "").slice(0, 40), created: Date.now(),
     src: m.pool === "bonk" ? "bonk" : "pump", dev: m.traderPublicKey,
@@ -142,8 +145,10 @@ async function pollDex() {
   if (!pick.length) return;
   pick.forEach((m) => { const t = feed.tokens.get(m); if (t) t.lastDex = now; });
   try {
+    const t0 = performance.now();
     const r = await fetch(DEX + pick.join(","));
     if (!r.ok) throw new Error(r.status);
+    feed.ping = Math.round(performance.now() - t0); feed.health.dex = Date.now();
     const pairs = await r.json();
     const best = {};
     for (const p of pairs) {
@@ -184,8 +189,9 @@ let jupWait = 0; // time until we may call Jupiter again after a 429
 async function jupFetch(url) {
   if (Date.now() < jupWait) throw new Error("waiting");
   const r = await fetch(url);
-  if (r.status === 429) { jupWait = Date.now() + 20000; throw new Error("429"); }
+  if (r.status === 429) { jupWait = Date.now() + 20000; feed.health.jupLimited = Date.now(); throw new Error("429"); }
   if (!r.ok) throw new Error(r.status);
+  feed.health.jup = Date.now();
   return r.json();
 }
 async function pollJup() {
@@ -214,7 +220,7 @@ async function pollSol() {
     const pairs = await r.json();
     const p = pairs.filter((x) => x.baseToken?.address === SOL_MINT && x.quoteToken?.symbol === "USDC")
       .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
-    if (p) { feed.solUsd = +p.priceUsd; store.set("solUsd", feed.solUsd); $("#st-sol").textContent = "SOL $" + feed.solUsd.toFixed(2); }
+    if (p) { feed.solUsd = +p.priceUsd; store.set("solUsd", feed.solUsd); $("#st-sol").textContent = "$" + feed.solUsd.toFixed(2); }
   } catch {}
 }
 
@@ -270,7 +276,7 @@ function snapshot() {
   for (const t of s.list) feed.tokens.set(t.mint, { ...t, lastDex: 0 });
 })();
 
-if (feed.solUsd) $("#st-sol").textContent = "SOL $" + feed.solUsd.toFixed(2);
+if (feed.solUsd) $("#st-sol").textContent = "$" + feed.solUsd.toFixed(2);
 connect();
 pollSol();
 setInterval(pollDex, 2500);
