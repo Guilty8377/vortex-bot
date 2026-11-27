@@ -6,7 +6,7 @@
 const PUMP_WS = "wss://pumpportal.fun/api/data";
 const DEX = "https://api.dexscreener.com/tokens/v1/solana/";
 const SOL_MINT = "So11111111111111111111111111111111111111112";
-const MAX_TOKENS = 300;
+const MAX_TOKENS = 400;
 const K = 32.19; // pump.fun curve constant (30 SOL x 1.073B tokens, in billions)
 
 // Vortex call rules (kept simple and shown on the calls page)
@@ -48,13 +48,15 @@ function upsert(mint, patch) {
     feed.tokens.set(mint, t);
   }
   Object.assign(t, patch);
-  if (t.mcSol != null && !t.migrated) t.progress = progressFromMcSol(t.mcSol);
+  if (!t.migrated) t.progress = t.curve != null ? Math.min(100, t.curve) : t.mcSol != null ? progressFromMcSol(t.mcSol) : t.progress;
   if (t.migrated) t.progress = 100;
   return t;
 }
 function trim() {
   if (feed.tokens.size <= MAX_TOKENS) return;
-  const list = [...feed.tokens.values()].sort((a, b) => a.created - b.created);
+  // drop the tokens that have been quiet the longest, not just the oldest, so live migrated tokens stay
+  const seen = (t) => Math.max(t.created || 0, t.gemT || 0, t.migratedAt || 0, t.fresh || 0);
+  const list = [...feed.tokens.values()].sort((a, b) => seen(a) - seen(b));
   const held = new Set(Object.keys(wallet.data?.positions || {}));
   for (const t of list) {
     if (feed.tokens.size <= MAX_TOKENS) break;
@@ -139,7 +141,7 @@ async function pollDex() {
   dexSoon.clear();
   must.forEach((m) => { if (!feed.tokens.has(m)) upsert(m, { created: now - 3600e3 }); });
   const candidates = [...feed.tokens.values()]
-    .filter((t) => !pick.includes(t.mint) && now - t.created > 8000)
+    .filter((t) => !pick.includes(t.mint) && now - t.created > 4000 && now - (t.gemT || 0) > 8000)
     .sort((a, b) => (a.lastDex - b.lastDex) || (b.created - a.created));
   for (const t of candidates) { if (pick.length >= 30) break; pick.push(t.mint); }
   if (!pick.length) return;
@@ -314,6 +316,49 @@ async function pollAssets() {
   } catch {}
 }
 setInterval(pollAssets, 3500);
+
+// ---------- fill the board straight away ----------
+// Jupiter's "gems" list (what jup.ag Pro uses) gives tokens that are new, about to graduate and graduated, with their stats,
+// so the columns are full the moment Vortex opens instead of waiting for new launches.
+const GEMS = "https://datapi.jup.ag/v1/pools/gems";
+const LAUNCHPADS = ["pump.fun", "letsbonk.fun"];
+function applyGem(pool, bucket) {
+  const b = pool.baseAsset || {};
+  if (!b.id) return;
+  const s5 = b.stats5m || {}, s1 = b.stats1h || {};
+  const created = Date.parse(b.firstPool?.createdAt || b.createdAt) || Date.now();
+  const priceSol = b.usdPrice && feed.solUsd ? b.usdPrice / feed.solUsd : null;
+  const known = feed.tokens.get(b.id);
+  const t = upsert(b.id, {
+    symbol: known?.symbol || String(b.symbol || "").replace(/^\$+/, "").slice(0, 16), name: known?.name || String(b.name || "").slice(0, 40),
+    image: known?.image || b.icon || "", created: known?.created && known.created < created ? known.created : created,
+    src: b.launchpad === "letsbonk.fun" ? "bonk" : "pump", dev: known?.dev || b.dev,
+    mcUsd: b.mcap ?? known?.mcUsd, priceUsd: b.usdPrice ?? known?.priceUsd, priceSol: priceSol ?? known?.priceSol, mcSol: priceSol ? priceSol * 1e9 : known?.mcSol,
+    liqUsd: b.liquidity ?? known?.liqUsd, vol5m: (s5.buyVolume || 0) + (s5.sellVolume || 0), vol1h: (s1.buyVolume || 0) + (s1.sellVolume || 0),
+    buys5m: s5.numBuys ?? known?.buys5m ?? 0, sells5m: s5.numSells ?? known?.sells5m ?? 0, ch5m: s5.priceChange ?? known?.ch5m, ch1h: s1.priceChange ?? known?.ch1h,
+    curve: b.bondingCurve ?? known?.curve, migrated: bucket === "graduated" || !!b.graduatedAt || known?.migrated,
+    migratedAt: b.graduatedAt ? Date.parse(b.graduatedAt) : known?.migratedAt, dexId: bucket === "graduated" ? (pool.dex || "pumpswap") : known?.dexId,
+    gemT: Date.now(),
+  });
+  applyAsset(t, b);
+  if (t.devPct == null && b.audit?.devBalancePercentage != null) t.devPct = b.audit.devBalancePercentage;
+  checkCall(t);
+}
+async function pollGems() {
+  try {
+    const body = { recent: { timeframe: "24h", launchpads: LAUNCHPADS }, aboutToGraduate: { timeframe: "24h", launchpads: LAUNCHPADS },
+      graduated: { timeframe: "24h", launchpads: LAUNCHPADS } };
+    const r = await fetch(GEMS, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) return;
+    const j = await r.json();
+    for (const bucket of ["recent", "aboutToGraduate", "graduated"]) for (const p of j[bucket]?.pools || []) applyGem(p, bucket);
+    feed.health.jup = Date.now();
+    trim();
+    feed.emit();
+  } catch {}
+}
+pollGems();
+setInterval(() => document.visibilityState === "visible" && pollGems(), 8000);
 setInterval(() => document.visibilityState === "visible" && pollSol(), 60000);
 setInterval(snapshot, 15000);
 setInterval(() => wallet.checkOrders((m) => feed.tokens.get(m)), 2000); // also runs when the tab is in the background

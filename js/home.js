@@ -80,7 +80,7 @@ function card(t, col) {
   const bPct = tot ? Math.round((t.buys5m / tot) * 100) : 50;
   const mc = t.mcUsd ?? (t.mcSol && feed.solUsd ? t.mcSol * feed.solUsd : null);
   const mcCls = mc >= 30000 ? "hi" : mc >= 10000 ? "mid" : "";
-  const fresh = t.fresh && Date.now() - t.fresh < 1500 ? " fresh" : "";
+  const fresh = "";
   const ch = t.ch5m ?? t.chSeen;
   const chTitle = t.ch5m != null ? "Price change in the last 5 minutes" : "Price change since Vortex first saw this token";
   const amt = +$("#quick-amt").value || 0.1;
@@ -99,7 +99,7 @@ function card(t, col) {
         <button class="mini${home.stars.has(t.mint) ? " on" : ""}" data-star="${t.mint}" title="Watchlist" aria-label="Add to watchlist">★</button>
       </div>
       <div class="l2">
-        <span class="age${age > 300 ? " old" : ""}" title="Age">${fmt.age(age)}</span>
+        <span class="age" data-born="${t.created}" title="Age"></span>
         <span class="soc">${socials(t.socials)}</span>
         ${ch != null ? `<span class="${ch >= 0 ? "up" : "down"} num" title="${chTitle}">${fmt.pct(ch)}${t.ch5m == null ? '<small class="muted"> new</small>' : ""}</span>` : ""}
         ${t.holders ? `<span title="Holders">👥 ${t.holders}</span>` : ""}
@@ -117,6 +117,48 @@ function card(t, col) {
       <button class="qb" data-buy="${t.mint}" aria-label="Paper buy ${amt} SOL of ${esc(t.symbol)}">⚡ ${amt} SOL</button>
     </div>
   </article>`;
+}
+
+// update only the cards that changed, so pictures do not reload and the page stays smooth
+function patchList(el, items) {
+  if (!el._keys) { el.innerHTML = ""; el._keys = new Map(); }
+  const keep = new Set(items.map((i) => i.key));
+  for (const [k, node] of el._keys) if (!keep.has(k)) { node.remove(); el._keys.delete(k); }
+  let prev = null;
+  for (const it of items) {
+    let node = el._keys.get(it.key);
+    if (!node) {
+      const tpl = document.createElement("template");
+      tpl.innerHTML = it.html.trim();
+      node = tpl.content.firstElementChild;
+      node._h = it.html;
+      if (it.fresh) node.classList.add("fresh");
+      el._keys.set(it.key, node);
+    } else if (node._h !== it.html) {
+      const tpl = document.createElement("template");
+      tpl.innerHTML = it.html.trim();
+      const fresh = tpl.content.firstElementChild;
+      // swap the inside but keep the same picture element if it did not change
+      const oldImg = node.querySelector(".ring img"), newImg = fresh.querySelector(".ring img");
+      if (oldImg && newImg && oldImg.getAttribute("src") === newImg.getAttribute("src")) newImg.replaceWith(oldImg);
+      node.replaceChildren(...fresh.childNodes);
+      for (const at of fresh.attributes) if (node.getAttribute(at.name) !== at.value) node.setAttribute(at.name, at.value);
+      node._h = it.html;
+    }
+    const want = prev ? prev.nextSibling : el.firstChild;
+    if (want !== node) el.insertBefore(node, want);
+    prev = node;
+  }
+  tickAges(el);
+}
+function tickAges(root = document) {
+  const now = Date.now();
+  for (const a of root.querySelectorAll("[data-born]")) {
+    const sec = (now - +a.dataset.born) / 1000;
+    const txt = fmt.age(sec);
+    if (a.textContent !== txt) a.textContent = txt;
+    a.classList.toggle("old", sec > 300);
+  }
 }
 
 function renderColumns() {
@@ -137,9 +179,8 @@ function renderColumns() {
   for (const col of Object.keys(lists)) {
     const el = $("#c-" + col);
     $("#n-" + col).textContent = lists[col].length;
-    el.innerHTML = lists[col].length
-      ? lists[col].slice(0, 60).map((t) => card(t, col)).join("")
-      : `<p class="empty">${feed.connected ? "Waiting for tokens…" : "Connecting to the live feed…"}</p>`;
+    if (!lists[col].length) { el.innerHTML = `<p class="empty">${feed.connected ? "Waiting for tokens…" : "Connecting to the live feed…"}</p>`; el._keys = null; continue; }
+    patchList(el, lists[col].slice(0, 60).map((t) => ({ key: t.mint, html: card(t, col), fresh: t.fresh && Date.now() - t.fresh < 1500 })));
   }
 }
 
@@ -260,7 +301,8 @@ function renderHome() {
   renderFeed(); renderTicker(); renderStatus(); renderPnl();
 }
 feed.on(renderHome);
-setInterval(renderHome, 1000); // keeps the ages ticking
+setInterval(() => tickAges($("#board")), 1000); // ages tick on their own
+setInterval(renderHome, 3000);
 
 // ---------- clicks ----------
 document.addEventListener("click", (e) => {
