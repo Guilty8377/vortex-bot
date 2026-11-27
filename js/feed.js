@@ -276,22 +276,38 @@ pollSol();
 setInterval(pollDex, 2500);
 setInterval(pollJup, 4000);
 
-// logos for tokens that still have none, from Jupiter's token list (different server from the price API)
-async function pollIcons() {
-  const need = [...feed.tokens.values()].filter((t) => !t.image && !t.iconTried && Date.now() - t.created > 15000).slice(0, 20);
+// token details from Jupiter's token list: logo, holders and the audit data the filters use
+function applyAsset(t, a) {
+  const au = a.audit || {};
+  if (a.icon && !t.image) t.image = a.icon;
+  if (a.holderCount != null) t.holders = a.holderCount;
+  if (a.twitter) t.socials.x ||= a.twitter;
+  if (a.website) t.socials.web ||= a.website;
+  if (a.telegram) t.socials.tg ||= a.telegram;
+  Object.assign(t, {
+    top10: au.topHoldersPercentage ?? t.top10, snipers: au.sniperPct ?? t.snipers, insiders: au.insiderPct ?? t.insiders,
+    bots: au.botHoldersPercentage ?? t.bots, bundle: au.bundlerStats?.holdingPctATH ?? t.bundle,
+    devMints: au.devMints ?? t.devMints, devMigrations: au.devMigrations ?? t.devMigrations,
+    mintOff: au.mintAuthorityDisabled, freezeOff: au.freezeAuthorityDisabled, iconReused: !!au.iconReused,
+    devFundedAt: au.devFundedAt ? Date.parse(au.devFundedAt) : t.devFundedAt,
+    dexPaid: !!a.dexPaidAt, fees: a.fees ?? t.fees, curve: a.bondingCurve ?? t.curve, organic: a.organicScore ?? t.organic,
+    traders5m: a.stats5m?.numTraders ?? t.traders5m, assetT: Date.now(),
+  });
+  if (a.dev && !t.dev) t.dev = a.dev;
+}
+async function pollAssets() {
+  const now = Date.now();
+  const need = [...feed.tokens.values()].filter((t) => now - t.created > 8000 && now - (t.assetT || 0) > 45000)
+    .sort((a, b) => (a.assetT || 0) - (b.assetT || 0) || b.created - a.created).slice(0, 20);
   if (!need.length) return;
-  need.forEach((t) => (t.iconTried = true));
+  need.forEach((t) => (t.assetT = now)); // do not ask again straight away even if it fails
   try {
     const j = await (await fetch("https://datapi.jup.ag/v1/assets/search?query=" + need.map((t) => t.mint).join(","))).json();
-    for (const a of j || []) {
-      const t = feed.tokens.get(a.id);
-      if (t && a.icon && !t.image) t.image = a.icon;
-      if (t && a.holderCount) t.holders = a.holderCount;
-    }
+    for (const a of j || []) { const t = feed.tokens.get(a.id); if (t) applyAsset(t, a); }
     feed.emit();
   } catch {}
 }
-setInterval(pollIcons, 6000);
+setInterval(pollAssets, 3500);
 setInterval(() => document.visibilityState === "visible" && pollSol(), 60000);
 setInterval(snapshot, 15000);
 setInterval(() => wallet.checkOrders((m) => feed.tokens.get(m)), 2000); // also runs when the tab is in the background

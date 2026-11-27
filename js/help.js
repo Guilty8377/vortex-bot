@@ -17,6 +17,7 @@ const FAQ = [
   ["How do I get alerts?", "Press Alerts in the bottom bar or Turn on alerts on the calls page, then allow notifications in your browser. Alerts only work while Vortex is open.", ["alert", "notification", "ping", "sound"]],
   ["What do take profit and stop loss do?", "They sell your whole position automatically when it reaches your target (for example x2) or falls by your limit (for example −30%). Set them on the token page. They only run while Vortex is open.", ["take profit", "stop loss", "tp", "sl", "auto"]],
   ["What does the safety score mean?", "It checks the token for common rug pull warning signs, like mint authority, big holders and snipers. A high score means fewer warning signs, not that the token is safe.", ["safety", "score", "rug", "scam", "safe"]],
+  ["How do filters work?", "Press ⚙ Filters, or the ⚙ at the top of a column. Pick the column, then choose protocols, audit checks like top 10 holders or snipers, money limits like market cap, and socials. Press Apply filters. You can save up to 3 presets, download them, or copy a link to share them.", ["filter", "filters", "sort", "preset", "hide"]],
   ["Can I make the text bigger?", "Yes. Press A+ in the top bar. You can also zoom your browser. Gains always have ▲ and losses ▼ so you do not need to rely on colour.", ["text", "bigger", "accessibility", "colour", "color", "blind"]],
   ["Does Vortex work on my phone?", "Yes. On small screens the three token columns become tabs at the top so you can switch between them.", ["phone", "mobile", "tablet"]],
 ];

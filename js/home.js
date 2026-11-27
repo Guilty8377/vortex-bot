@@ -33,6 +33,18 @@ function tagsFor(t) {
   return out.join("");
 }
 
+// small holder stats like Axiom: green when low, amber when middling, pink when high
+function statChips(t) {
+  const lvl = (v, ok, mid) => (v <= ok ? "good" : v <= mid ? "mid" : "bad");
+  const c = [];
+  const add = (v, icon, title, ok, mid) => { if (v != null) c.push(`<span class="sc ${lvl(v, ok, mid)}" title="${title}">${icon} ${v.toFixed(v < 10 ? 1 : 0)}%</span>`); };
+  add(t.top10, "👑", "Top 10 holders own", 25, 40);
+  add(t.snipers, "🎯", "Snipers hold", 10, 25);
+  add(t.insiders, "🕵", "Insiders hold", 10, 25);
+  add(t.bundle, "📦", "Bundles hold", 10, 25);
+  return c.length ? `<div class="scs">${c.join("")}</div>` : "";
+}
+
 function socials(s) {
   const a = [];
   if (s.x) a.push(`<a href="${esc(s.x)}" target="_blank" rel="noopener" title="X / Twitter" aria-label="X page">𝕏</a>`);
@@ -93,6 +105,7 @@ function card(t, col) {
         ${t.holders ? `<span title="Holders">👥 ${t.holders}</span>` : ""}
       </div>
       <div class="tags">${tagsFor(t)}</div>
+      ${statChips(t)}
       ${posRow(t)}
     </div>
     <div style="display:grid">
@@ -113,6 +126,7 @@ function renderColumns() {
     if (home.src !== "all" && t.src !== home.src) continue;
     if (home.safe && risky(t)) continue;
     const col = column(t);
+    if (typeof passFilter === "function" && !passFilter(t, col)) continue;
     const q = home.q[col];
     if (q && !(`${t.symbol} ${t.name} ${t.mint}`.toLowerCase().includes(q))) continue;
     lists[col].push(t);
@@ -205,6 +219,7 @@ function renderDiscover() {
   if (tab === "watch") list = list.filter((t) => home.stars.has(t.mint));
   if (tab === "recent") list = recent.map((m) => feed.get(m)).filter(Boolean);
   if (tab === "trending") list = list.filter((t) => (t.vol5m || 0) > 0);
+  if (typeof passFilter === "function" && tab !== "watch" && tab !== "recent") list = list.filter((t) => passFilter(t, column(t)));
   const k = home.dsort;
   if (tab !== "recent") list.sort((a, b) => k === "age" ? b.created - a.created : (b[k] ?? -1e9) - (a[k] ?? -1e9));
   const amt = +$("#quick-amt").value || 0.1;
